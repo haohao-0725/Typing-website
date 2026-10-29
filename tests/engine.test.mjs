@@ -4,7 +4,8 @@ import { readFile } from 'node:fs/promises';
 import { chars, compareText, summarize, WordQueue, splitSentences, remainingMilliseconds, validateMinutes } from '../src/engine.js';
 import { words } from '../src/words.js';
 import { loadSessions, saveSession, clearSessions } from '../src/storage.js';
-import { renderPage, routes } from '../scripts/site.mjs';
+import { renderPage, routes, routeContext } from '../scripts/site.mjs';
+import { renderWordStrip } from '../src/word-strip.js';
 
 test('graphemes count combined accents and emoji once; preserve punctuation width', () => {
   assert.equal(chars('e\u0301👩‍💻中，').length, 4);
@@ -34,15 +35,36 @@ test('speed and accuracy have consistent Chinese and English units', () => {
   assert.equal(summarize([], 0, 'en').speed, 0);
   assert.equal(summarize([], 0, 'en').accuracy, 0);
 });
-test('ten-question queue refills across many bank cycles without mutating source', () => {
+test('five-question queue refills across many bank cycles without mutating source', () => {
   for (const bank of Object.values(words)) {
     const original = [...bank]; const queue = new WordQueue(bank, () => .37);
     for (let i = 0; i < bank.length * 3; i++) {
-      assert.equal(queue.queue.length, 10); assert.ok(bank.includes(queue.queue[0]));
+      assert.equal(queue.queue.length, 5); assert.ok(bank.includes(queue.queue[0]));
       const second = queue.queue[1]; queue.advance(); assert.equal(queue.queue[0], second);
     }
     assert.deepEqual(bank, original);
   }
+});
+test('word strip always has six cells with the active word second and only one previous result', () => {
+  for (const bank of [words.zh, words.en]) {
+    const queue = new WordQueue(bank, () => .37);
+    let previous = null;
+    for (let i = 0; i < 3; i++) {
+      const html = renderWordStrip(queue.queue, previous);
+      assert.equal((html.match(/<li /g) || []).length, 6);
+      const items = [...html.matchAll(/<li\b[\s\S]*?<\/li>/g)].map(m=>m[0]);
+      assert.ok(items[0].includes('word-previous')); assert.ok(items[1].includes('aria-current="step"'));
+      assert.ok(items[1].includes(`<strong>${queue.queue[0]}</strong>`));
+      assert.equal((html.match(/word-previous/g) || []).length, 1);
+      if (!previous) assert.ok(items[0].includes('is-empty'));
+      else assert.ok(items[0].includes(previous.comparison.errors ? 'is-wrong' : 'is-correct'));
+      previous = {expected:queue.queue[0],actual:i === 0 ? queue.queue[0] : 'wrong',comparison:{errors:i === 0 ? 0 : 1}};
+      queue.advance();
+    }
+  }
+  assert.throws(()=>new WordQueue(['a','a','b','c','d']), /5 unique/);
+  const escaped = renderWordStrip(['<script>', 'a', 'b', 'c', 'd'], {expected:'<old>',actual:'<input>',comparison:{errors:1}});
+  assert.ok(!escaped.includes('<script>')); assert.ok(escaped.includes('&lt;old&gt;'));
 });
 test('custom duration is an integer between 1 and 60, deadlines include background time', () => {
   for (const value of [0, -1, 61, 1.5, '', 'abc', Infinity]) assert.equal(validateMinutes(value), null);
@@ -52,9 +74,15 @@ test('custom duration is an integer between 1 and 60, deadlines include backgrou
 });
 test('bundled article texts are real, attributed, punctuated and all sentences fit the input', async () => {
   const articles = JSON.parse(await readFile(new URL('../src/articles.json', import.meta.url)));
-  assert.equal(articles.length, 6);
+  assert.equal(articles.length, 20);
+  for (const language of ['zh','en']) {
+    const library = articles.filter(a=>a.language === language);
+    assert.equal(library.length, 10); assert.equal(new Set(library.map(a=>a.id)).size, 10);
+    assert.equal(new Set(library.map(a=>a.displayTitle)).size, 10);
+  }
   for (const a of articles) {
     assert.ok(a.text.length > 100); assert.ok(a.revision > 0);
+    assert.ok(a.displayTitle); assert.ok(a.changes);
     assert.ok(a.permalink.includes(String(a.revision))); assert.ok(a.history.includes('history'));
     assert.equal(a.license, 'CC BY-SA 4.0'); assert.ok(/[。.!?]/.test(a.text));
     const sentences = splitSentences(a.text, a.language);
@@ -82,15 +110,19 @@ test('a blocked localStorage property itself does not break practice', () => {
 });
 test('each mode has crawlable static HTML, correct relative assets and deployment metadata', () => {
   for (const route of routes) {
+    const context=routeContext(route);
     const html = renderPage(route);
     assert.ok(!html.includes('{{')); assert.ok(html.includes('<h1')); assert.ok(html.includes('<meta name="description"'));
     assert.ok(html.includes(`data-mode="${route.includes('articles') ? 'articles' : 'words'}"`));
-    const prefix = route ? '../../' : './';
+    const prefix = context.root;
     assert.ok(html.includes(`href="${prefix}src/style.css"`));
-    assert.ok(html.includes(`href="${prefix}en/articles/"`));
+    assert.ok(html.includes(`href="${prefix}${context.uiPrefix}${context.language}/articles/"`));
     assert.ok(!html.includes('rel="canonical"'));
     const deployed = renderPage(route, 'https://example.com/typing/');
-    assert.ok(deployed.includes(`rel="canonical" href="https://example.com/typing/${route || 'zh/words/'}"`));
+    assert.ok(deployed.includes(`rel="canonical" href="https://example.com/typing/${context.uiPrefix}${context.practiceRoute}"`));
+    assert.ok(deployed.includes('hreflang="zh-Hant"'));
+    assert.ok(deployed.includes('hreflang="en"'));
+    assert.ok(deployed.includes('application/ld+json'));
     assert.ok(!deployed.includes('localhost'));
   }
 });

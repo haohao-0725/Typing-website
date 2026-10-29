@@ -18,7 +18,7 @@ class Element extends EventTarget {
 }
 
 let run = 0;
-async function fixture(callback) {
+async function fixture(callback, options = {}) {
   const original = Object.fromEntries(['document', 'window', 'localStorage', 'setInterval', 'clearInterval', 'setTimeout', 'clearTimeout'].map(k => [k, globalThis[k]]));
   const originalNow = Date.now;
   const elements = new Map();
@@ -29,7 +29,7 @@ async function fixture(callback) {
   const groups = { '[data-dialog]':[], '[data-close]':[], 'dialog':[], '.segmented a':links,
     '.duration-options button':[...duration, custom], '[data-minutes]':duration };
   const documentFixture = new EventTarget();
-  documentFixture.body = { dataset:{language:'zh', mode:'words'} };
+  documentFixture.body = { dataset:{language:options.language || 'zh', mode:'words', ui:options.ui || 'zh'} };
   documentFixture.querySelector = get;
   documentFixture.getElementById = id => get('#' + id);
   documentFixture.querySelectorAll = selector => groups[selector] || [];
@@ -48,7 +48,7 @@ async function fixture(callback) {
   try {
     await import(`../src/main.js?fixture=${++run}`);
     await callback({ get, fire, duration,
-      word:() => get('#prompt-area').innerHTML.match(/<strong>([^<]+)<\/strong>/)[1],
+      word:() => get('#prompt-area').innerHTML.match(/<li class="word-current[^>]*>[\s\S]*?<strong>([^<]+)<\/strong>/)[1],
       type:value => { get('#typing-input').value = value; fire('#typing-input', 'input'); },
       enter:() => fire('#typing-input', 'keydown', {key:'Enter', keyCode:13, isComposing:false}),
       advance:ms => { now += ms; for (const fn of [...intervals]) fn(); },
@@ -108,4 +108,37 @@ test('paste and drop are blocked before scoring begins', async () => {
     assert.equal(fire('#typing-input', 'beforeinput', {inputType:'insertFromPaste', data:'some text'}).defaultPrevented, true);
     assert.equal(get('#timer').innerHTML, '03<span>:</span>00'); assert.equal(saved().length, 0);
   });
+});
+
+test('after multiple submissions only the latest result is shown, while all records are saved', async () => {
+  await fixture(({get,fire,word,type,enter,advance,saved}) => {
+    const first = word(); type(first); enter();
+    assert.ok(get('#prompt-area').innerHTML.includes('word-previous is-correct'));
+    type('錯誤輸入'); enter();
+    assert.ok(get('#prompt-area').innerHTML.includes('word-previous is-wrong'));
+    assert.equal((get('#prompt-area').innerHTML.match(/<li /g)||[]).length, 6);
+    assert.equal(get('#recent-words').innerHTML, '');
+    advance(3000); fire('#start-button','click');
+    assert.equal(saved()[0].records.length, 2);
+    assert.equal(saved()[0].records[0].actual, first);
+    fire('#start-button','click');
+    assert.ok(get('#prompt-area').innerHTML.includes('word-previous is-empty'));
+  });
+});
+
+test('recorded keyboard counts survive submission, reset per answer, and coexist with English UI', async () => {
+  await fixture(({get,fire,word,type,enter,advance,saved}) => {
+    const target=word();
+    fire('#typing-input','keydown',{key:'a',code:'KeyA',isComposing:false});
+    fire('#typing-input','keydown',{key:'Process',code:'KeyJ',keyCode:229,isComposing:true});
+    fire('#typing-input','keydown',{key:'v',code:'KeyV',ctrlKey:true});
+    type(target);enter();
+    assert.ok(get('#prompt-area').innerHTML.includes('✓ Correct'));
+    fire('#typing-input','keydown',{key:'b',code:'KeyB',isComposing:false});type('wrong');enter();
+    advance(3000);fire('#start-button','click');
+    const records=saved()[0].records;
+    assert.deepEqual(records[0].keyUsage,{KeyA:1,KeyJ:1});assert.equal(records[0].keyUsageVersion,1);
+    assert.deepEqual(records[1].keyUsage,{KeyB:1});
+    assert.equal(get('#save-status').textContent,'Saved in this browser.');
+  },{language:'en',ui:'en'});
 });

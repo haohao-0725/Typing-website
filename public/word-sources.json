@@ -1,0 +1,31 @@
+{
+  "generatedAt": "2026-10-29T17:14:13.079787+00:00",
+  "counts": {
+    "zh": 5000,
+    "en": 5000
+  },
+  "previousUniqueCounts": {
+    "zh": 298,
+    "en": 371
+  },
+  "license": "CC BY-SA 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+  "sources": [
+    {
+      "name": "CC-CEDICT",
+      "authors": "CC-CEDICT contributors",
+      "url": "https://www.mdbg.net/chinese/dictionary?page=cedict",
+      "download": "https://www.mdbg.net/chinese/export/cedict/cedict_1_0_ts_utf-8_mdbg.txt.gz",
+      "sha256": "06d0d0e23362867f00ed399a634af016954d14cf3e074b1a937088db6837fb74",
+      "notice": "public/licenses/cc-cedict-notice.txt"
+    },
+    {
+      "name": "wordfreq 3.1.1",
+      "authors": "Robyn Speer, Luminoso Technologies, and contributors; underlying sources credited in notice",
+      "url": "https://github.com/rspeer/wordfreq",
+      "notice": "public/licenses/wordfreq-notice.md"
+    }
+  ],
+  "changes": "Original seed words retained; Chinese traditional headwords (2–4 Han characters) selected from CC-CEDICT and ordered using wordfreq simplified-token frequency. Proper-name readings and selected variant/archaic/vulgar definitions excluded. English lowercase tokens (2–14 letters) selected by wordfreq rank with a small exclusion list. Deduplicated and limited to 5,000 per language. No definitions or corpus passages included.",
+  "generatedDataSha256": "c1aa7a5c76dac577866ef9587b962147933f52beaf0cc80b81cf5bbfbec158d9"
+}

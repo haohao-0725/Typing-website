@@ -1,100 +1,88 @@
 # 字間 ZIJIAN
 
-安靜、俐落的中英文打字練習室。
+[網站](https://haohao-0725.github.io/Typing-website/) · [English interface](https://haohao-0725.github.io/Typing-website/en-ui/zh/words/) · [部署紀錄](https://github.com/haohao-0725/Typing-website/actions/workflows/pages.yml)
 
-**網站：[字間 ZIJIAN](https://haohao-0725.github.io/Typing-website/)** · [原始碼](https://github.com/haohao-0725/Typing-website) · [部署狀態](https://github.com/haohao-0725/Typing-website/actions/workflows/pages.yml)
+純靜態中英文打字練習工具，無帳號、無後台；測驗與分析在瀏覽器完成。
 
-## 在本機開啟
+## 本機執行
 
-需要 Node.js 22 以上。不需要安裝 npm 套件。
-
-```powershell
-cd Z:\VScode\typing_website
-npm run dev
-```
-
-開啟 <http://127.0.0.1:5173/>。修改檔案後重新整理頁面；本機伺服器只監聽 127.0.0.1。
+需要 Node.js 22 以上，不需要安裝 npm 套件。
 
 ```powershell
-npm test          # 計分、題目佇列、組字事件、倒數、儲存與靜態頁面檢查
-npm run build    # 輸出至 dist/，只會重建這個輸出資料夾
-npm run preview  # 在 http://127.0.0.1:4173/ 檢查 dist/
-```
-
-## 第一版功能
-
-- 中文單字、中文文章、英文單字、英文文章四種練習。
-- 中文採繁體字，單字為日常詞彙；英文區分大小寫。
-- 1、3、5 分鐘，或自訂 1–60 整數分鐘；第一個字或中文組字開始時才啟動倒數。
-- 單字固定顯示 10 題，按 Enter 送出後補題；英文也可按空白送出。
-- 文章來自維基百科，包含標點與句內空格。逐句輸入、Enter 送出，打完一篇接續下一篇，直到時間結束。
-- 輸入錯誤仍可送出；送出前可修正，紀錄保留每題最終輸入。
-- 即時速度、正確率、正確／錯誤字元；測驗結束可逐題查看、下載 JSON。
-- 瀏覽器保留最近 50 次測驗。儲存受限或容量不足時顯示提示，仍可下載當次結果。
-- 中文輸入法的選字 Enter 與送出 Enter 分開處理；未完成組字不計分。
-- 切換分頁仍依實際時間倒數，不接受貼上或拖入文字。
-- 響應式排版、原生可用鍵盤操作的對話框、減少動態效果設定、跳至主要內容連結。
-
-## 計分規則
-
-中文 CPM＝正確字元／實際分鐘；英文 WPM＝正確字元／5／實際分鐘。
-
-使用 Unicode grapheme 與 NFC 正規化，例如組合重音只算一字。字元包含標點、數字和句內空格；全形與半形、大小寫視為不同。單字間 Enter、文章換句不算字元。
-
-逐題使用 Levenshtein 文字對齊，將替換、漏字與多打分別記錄，避免一個漏字讓後面全部算錯。正確率＝正確字元／（正確＋錯誤）×100%。相同最短編輯距離的比對採固定順序，因此少數重複文字可能有多種同樣合理的對齊。
-
-按 Enter 視為提交整題，缺少的文字算漏字；時間到或提前結束只比對目前已輸入的部分，不把未打到的句尾算錯。這是本站的練習規則，與其他測驗的扣分方式可能不同。不同模式、不同語言的成績應分開比較。
-
-## 專案結構
-
-| 檔案 | 用途 |
-| --- | --- |
-| `index.html` | 共用靜態 HTML 模板，包含可讀介紹與完整對話框 |
-| `src/main.js` | 測驗流程、中文組字、計時與介面 |
-| `src/engine.js` | 文字對齊、計分、單字佇列 |
-| `src/storage.js` | 本機歷史紀錄與儲存失敗處理 |
-| `src/words.js` | 自行編選的中英文單字題庫 |
-| `src/articles.json` | 六篇維基百科節錄及逐篇版本、來源、授權 |
-| `src/style.css` | 暖白、墨綠與朱紅的文字介面 |
-| `scripts/site.mjs` | 五個可獨立讀取的靜態頁面與 SEO 資訊 |
-| `scripts/build.mjs` | 本地建置；正式網址設定後產生 sitemap、canonical |
-| `scripts/import-wikipedia.mjs` | 手動更新維基百科節錄，更新後需檢閱內容 |
-| `docs/架站研究.md` | 架站方案、Google 收錄方式與官方參考 |
-
-## 文章來源與授權
-
-目前中文：茶、自行車、圖書館；英文：Coffee、Bicycle、Library。
-
-文章於 2026-10-29 透過 Wikimedia API 取得，節錄導言前兩段、移除註腳與換行並合併空白；中文以臺灣繁體顯示。API 偶爾僅有一段導言，此時取該段。每筆資料包含永久版本連結與作者編輯歷史，使用介面也提供來源。
-
-文章由 Wikipedia contributors 撰寫，節錄內容依 [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) 提供，沿用相同授權。此授權適用於文章內容，並不表示其他程式碼自動採用相同授權。程式碼尚未選擇公開授權，正式公開 repository 前可再決定。
-
-可手動執行 `npm run content:refresh` 更新題庫。這不是建置或測驗的必要步驟；正式上線前應人工檢閱新版本文字，避免 Wikipedia 編輯造成題目突然變動。測驗時讀取已收錄的本地文章，不呼叫 Wikimedia API。
-
-## GitHub Pages 自動部署
-
-正式網址為 `https://haohao-0725.github.io/Typing-website/`。Pages 使用 GitHub Actions 作為發佈來源，每次 push 到 `main` 或手動執行 `Deploy GitHub Pages`，會自動：
-
-1. 使用 Node.js 24 執行測試。
-2. 從 Pages 設定讀取正式網址，透過 `SITE_URL` 建置靜態 HTML、canonical 與 sitemap。
-3. 上傳 `dist/`，測試與建置成功後部署至 `github-pages` 環境。
-
-流程位於 `.github/workflows/pages.yml`，官方 Actions 固定至已確認的 commit。無須手動維護 `gh-pages` 分支，也不用把 `dist/` 加進 Git。若要在本機檢查正式網址設定：
-
-```powershell
-$env:SITE_URL = 'https://haohao-0725.github.io/Typing-website/'
+npm run dev      # http://127.0.0.1:5173/
 npm test
 npm run build
+npm run preview  # http://127.0.0.1:4173/
 ```
 
-將 `dist/` 作為 GitHub Pages 發佈成品。所有資源與導覽使用相對路徑，可放在根網域或 repository 子目錄。首頁 canonical 指向 `/zh/words/`，避免和中文單字頁重複；sitemap 收錄四種主要模式。
+修改後重新整理。開發伺服器僅監聽 127.0.0.1；修改產頁腳本後需重啟 dev。preview 讀取 dist/，更新後重新 build 即可。
 
-網站 sitemap 位於 [sitemap.xml](https://haohao-0725.github.io/Typing-website/sitemap.xml)。Google Search Console 的所有權驗證與提交尚未設定；網站公開後 Google 可能自行發現，仍不保證收錄時間或排名。
+## 功能
 
-## 隱私與現階段限制
+- 中文／英文練習，各 5,000 個去重詞彙與 10 篇維基百科文章。
+- 介面提供繁體中文／英文，與練習語言獨立切換。
+- 1、3、5 或自訂 1–60 分鐘；第一個字或中文組字開始時啟動計時。
+- 單字一列六格：上一題、目前目標、後續四題。輸入目標固定第二格，左側只保留最近一題的對錯。
+- Enter 送出，英文單字也可用空白鍵；打錯仍可送出。文章逐句練習、完成後接續。
+- 成績、逐題紀錄、JSON 下載與瀏覽器最近 50 次測驗。
+- 分析室：字元錯誤位置與實體鍵位的錯題關聯熱圖，支援次數／比例與可檢查的計算方式。沒有錯字複習功能。
+- 主畫面僅保留功能資訊；完整規則與隱私說明收在對話框。
 
-無登入、後台、遠端排行榜、第三方分析或跨裝置同步。輸入與測驗紀錄僅存在瀏覽器 localStorage；清除網站資料會移除。瀏覽器儲存空間不足時不會繼續寫入歷史，介面會提示下載。
+## 熱圖如何解讀
 
-目前字型透過 Google Fonts 載入，因此初次開啟需要向 Google 字型服務請求字型；失敗時使用本機備援字型，練習功能不受影響。若要完全不依賴第三方資源，可將字型轉為自託管。網站透過 GitHub Pages 託管，GitHub 會為安全用途記錄訪客 IP 位址。
+**字元錯誤位置**：最終答案以編輯距離對齊。錯字、漏字計入「應輸入字元」的 US QWERTY 位置，多打的字計入其輸出位置；分母為該鍵對應的所有已比對字元。它是字元分布，不是觀察到的實體按鍵。大小寫共用字母鍵，不推斷 Shift。
 
-輸入法已包含瀏覽器組字事件的防護與自動事件測試；仍應在你實際使用的注音、倉頡、嘸蝦米或其他輸入法上確認選字手感。手機能操作，但軟體鍵盤的自動改字可能影響測驗，比較成績時建議使用同一裝置與輸入法。
+**錯題關聯鍵位**：新版測驗在輸入框內累計 KeyboardEvent.code，不保存按鍵順序。每道完整送出的題目，每個使用過的鍵位只貢獻一個樣本；分子是答案有錯的題數，分母是使用該鍵的題數。這只能說鍵位與錯題同時出現，不能證明該鍵打錯。中文輸入法不由錯誤漢字反推注音／倉頡；舊紀錄、缺少 code 的裝置及未送出的部分答案不補值。
+
+樣本少於五次以虛線標示。示範資料與個人資料分開，不會儲存為成績。鍵位圖採 US QWERTY 位置；其他鍵盤配置與手機提供的 code 可能不同。
+
+## 題庫與授權
+
+原題庫去重後為中文 298、英文 371 個。目前兩者各 **5,000** 個。
+
+- 中文以 CC-CEDICT 正體詞條搭配 wordfreq 詞頻選取，優先保留自行編選詞；過濾部分專名、異體與不適合詞條。
+- 英文以 wordfreq 詞頻選取 2–14 字母的小寫詞彙，去重並排除部分網頁雜訊與粗俗詞。
+- 產生的詞庫**資料**依 CC BY-SA 4.0 提供；來源、改作方式、原始版本與校驗碼見 [word-sources.json](public/word-sources.json) 與 [授權資料](public/licenses/)。資料授權與應用程式碼分開管理。
+- 文章由 Wikipedia contributors 撰寫，採 CC BY-SA 4.0。每篇保存永久版本、作者歷史與節錄修改說明，介面「來源」可查。
+
+已產生的詞庫隨 Git 保存；部署不需要 Python 或外部 API。重新產生時：
+
+```powershell
+python -m pip install --target artifacts/word-tools wordfreq==3.1.1
+npm run content:words
+```
+
+CC-CEDICT 官方下載若過慢，腳本會中止；可將官方壓縮檔放到 artifacts/word-sources/cedict.u8.gz 後再執行。來源快取不進 Git。
+
+文章更新用 `npm run content:refresh`；只追加題目並保留已收錄版本用 `npm run content:refresh -- --append`。更新後需檢閱內容。
+
+## 部署與搜尋設定
+
+main 的每次 push 會執行測試、建置並部署到 GitHub Pages。原本四個練習網址保留，英文介面新增在 en-ui/ 下。
+
+網站提供十個實體 HTML（含兩個首頁別名）、八個主要測驗頁的 canonical 與 hreflang、WebApplication 結構化資料、可讀標題與說明，以及 [sitemap](https://haohao-0725.github.io/Typing-website/sitemap.xml)。網站屬於能被搜尋引擎索引的靜態架構，無須為了收錄更換平台；這些設定不保證任何關鍵字排名。
+
+Google Search Console 由網站擁有者手動操作：
+1. 新增網址前置字元資源：`https://haohao-0725.github.io/Typing-website/`。
+2. 若選 HTML 標記驗證，把提供的 content 值填入 site.config.json 的 googleSiteVerification，commit/push 後驗證。預設為空，不會生成假的驗證標記。
+3. 若選 HTML 檔案驗證，把 Google 提供的 google….html 原檔放入 public/；建置會另複製到網站根目錄，保留完整檔名與內容。
+4. 驗證後提交 sitemap.xml，使用網址檢查工具檢查主要測驗頁。
+
+專案子目錄的 robots.txt 不取代網域根目錄 robots.txt。Google 實際選定的索引與排名應以 Search Console 報告為準。
+
+## 計分與隱私
+
+中文 CPM＝正確字元／實際分鐘；英文 WPM＝正確字元／5／實際分鐘。正確率＝正確／（正確＋錯誤）。使用 Unicode grapheme、NFC 與文字對齊，區分錯字、漏字與多打。
+
+按 Enter 視為提交完整題目；時間到或提前結束只結算已輸入前綴，未完成的中文組字不計分。不同模式與輸入法的速度不宜直接相比。
+
+輸入內容、答案與鍵位累計只儲存在此瀏覽器，不上傳。儲存受限時仍可練習與下載當次結果，但不保留歷史。Google Fonts 提供字型；GitHub Pages 可能為安全用途記錄 IP。清除瀏覽器網站資料會移除歷史。
+
+## 主要程式
+
+- src/main.js：測驗、組字、計時與介面。
+- src/engine.js：計分、佇列與句子切分。
+- src/analytics.js、src/analysis-ui.js：熱圖計算與分析室。
+- src/i18n.js：介面翻譯；scripts/site.mjs 產生各語系 HTML。
+- src/words.js：產生的詞庫資料；scripts/import-words.py 為匯入工具。
+- site.config.json：正式網址與選用的 Google 驗證值。

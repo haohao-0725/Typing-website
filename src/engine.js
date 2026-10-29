@@ -62,11 +62,14 @@ export function shuffled(values, random = Math.random) {
   return result;
 }
 
+export const WORD_PREVIEW_COUNT = 5;
+
 export class WordQueue {
   constructor(values, random = Math.random) {
-    if (values.length < 10) throw new Error('Word bank requires at least 10 entries');
-    this.values = [...new Set(values)]; this.random = random; this.bag = [];
-    this.queue = Array.from({ length: 10 }, () => this.next());
+    this.values = [...new Set(values)];
+    if (this.values.length < WORD_PREVIEW_COUNT) throw new Error('Word bank requires at least 5 unique entries');
+    this.random = random; this.bag = [];
+    this.queue = Array.from({ length: WORD_PREVIEW_COUNT }, () => this.next());
   }
   next() {
     if (!this.bag.length) this.bag = shuffled(this.values, this.random);

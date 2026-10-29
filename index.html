@@ -1,97 +1,60 @@
 <!doctype html>
-<html lang="zh-Hant-TW">
+<html lang="{{htmlLang}}">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f6f5f0">
-  <title>{{title}}</title>
-  <meta name="description" content="{{description}}">
-  <meta property="og:type" content="website">
-  <meta property="og:title" content="{{title}}">
-  <meta property="og:description" content="{{description}}">
-  {{seo}}
-  <link rel="icon" href="{{root}}public/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="{{root}}src/style.css">
-  <script type="module" src="{{root}}src/main.js"></script>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#f6f5f0">
+<title>{{title}}</title><meta name="description" content="{{description}}"><meta property="og:type" content="website"><meta property="og:title" content="{{title}}"><meta property="og:description" content="{{description}}">
+{{seo}}
+<link rel="icon" href="{{root}}public/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="{{root}}src/style.css"><script type="module" src="{{root}}src/main.js"></script>
 </head>
-<body data-language="{{language}}" data-mode="{{mode}}" data-root="{{root}}">
-  <a class="skip-link" href="#practice">跳至打字練習</a>
-  <div class="site-shell">
-    <header class="site-header">
-      <a class="brand" href="{{root}}" aria-label="字間，回到首頁"><span class="brand-mark" aria-hidden="true">字<span></span></span><span class="brand-name">字間<small>ZIJIAN</small></span></a>
-      <nav class="main-nav" aria-label="主選單">
-        <a class="nav-active" href="#practice">練習室<span class="nav-dot"></span></a>
-        <button type="button" id="history-button">練習紀錄 <span class="history-count" id="history-count">0</span></button>
-        <button type="button" data-dialog="guide-dialog">使用指南 <span aria-hidden="true">↗</span></button>
-      </nav>
-      <span class="header-note"><span class="tiny-cross" aria-hidden="true">✳</span> 留一點時間，給自己。</span>
-    </header>
-
-    <main>
-      <section class="intro" aria-labelledby="page-title">
-        <div class="intro-copy"><p class="eyebrow"><span class="accent-line"></span> A LITTLE PRACTICE, EVERY DAY.</p>
-          <h1 id="page-title">把思緒，<br>打成自己的<span class="title-accent">節奏</span>。</h1>
-          <p class="intro-description">從一個字，到一段話。<br class="mobile-only">在字與字之間，找到你的手感。</p>
-        </div>
-        <div class="intro-art" aria-hidden="true">
-          <span class="art-cross">+</span><span class="art-caption">MAKE EVERY<br>KEYSTROKE COUNT.</span>
-          <div class="keycap keycap-back"><span>shift</span><b>⇧</b></div>
-          <div class="keycap keycap-front"><span>01</span><b>字</b><i>間</i></div>
-          <span class="art-line"></span><span class="art-coordinate">25°02′ N &nbsp; 121°33′ E</span>
-        </div>
-      </section>
-
-      <section class="practice-section" id="practice" aria-labelledby="practice-title">
-        <div class="section-heading"><h2 id="practice-title">{{practiceTitle}}</h2><span class="section-index">THE PRACTICE ROOM <span>／ 01</span></span></div>
-        <div class="configuration" aria-label="練習設定">
-          <div class="setting-group"><span class="setting-label">練習語言</span><nav class="segmented" aria-label="練習語言">{{languageLinks}}</nav></div>
-          <div class="setting-group mode-setting"><span class="setting-label">練習模式</span><nav class="segmented" aria-label="練習模式">{{modeLinks}}</nav></div>
-          <fieldset class="duration-setting"><legend class="setting-label">練習時間</legend><div class="duration-options" id="duration-options"><button type="button" data-minutes="1" aria-pressed="false">1 <span>分鐘</span></button><button type="button" data-minutes="3" aria-pressed="true" class="selected">3 <span>分鐘</span></button><button type="button" data-minutes="5" aria-pressed="false">5 <span>分鐘</span></button><button type="button" id="custom-button" aria-pressed="false">自訂 <span>↗</span></button></div></fieldset>
-        </div>
-
-        <div class="workspace">
-          <div class="typing-panel">
-            <div class="panel-topline"><div class="panel-status"><span class="status-dot" id="status-dot"></span><span id="status-text">準備好了，慢慢來。</span></div><button type="button" id="shuffle-button" class="text-button"><span aria-hidden="true">↻</span> <span id="shuffle-label">重新出題</span></button></div>
-            <div id="article-picker-wrap" class="article-picker-wrap" {{articleHidden}}><label for="article-picker">選一篇，開始閱讀</label><select id="article-picker">{{articleOptions}}</select><span id="sentence-counter" class="mono"></span></div>
-            <div class="prompt-area" id="prompt-area" aria-label="練習題目">{{initialPrompt}}</div>
-            <div class="article-source" id="article-source" {{articleHidden}}>{{articleSource}}</div>
-            <div class="input-area"><div class="input-label-row"><label for="typing-input" id="input-label">{{inputLabel}}</label><span id="input-position" class="mono">{{inputPosition}}</span></div>
-              <div class="input-wrap"><textarea id="typing-input" rows="1" aria-describedby="typing-hint input-feedback" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" placeholder="在這裡輸入，第一個字落下時計時…" maxlength="600"></textarea><button type="button" id="submit-button" aria-label="送出這一題" title="送出這一題（Enter）">↵</button></div>
-              <div class="input-bottom"><p id="typing-hint">{{hint}}</p><span id="input-feedback" role="status" aria-live="polite"></span></div>
-            </div>
-            <div class="recent-strip"><span class="recent-label">剛剛打過</span><div id="recent-words"><span class="recent-empty">每一次練習，都從第一個字開始。</span></div><span class="legend"><i></i>正確 <i></i>錯誤</span></div>
-          </div>
-
-          <aside class="session-panel" aria-label="即時練習數據">
-            <div class="timer-heading"><span>留給自己的一點時間</span><span aria-hidden="true">◷</span></div>
-            <div id="timer" class="timer" role="timer" aria-label="剩餘時間">03<span>:</span>00</div>
-            <div class="timer-track"><div id="timer-progress"></div></div>
-            <div class="live-stats"><div><span>打字速度 <small id="speed-unit">{{speedUnit}}</small></span><strong id="live-speed">—</strong></div><div><span>正確率 <small>%</small></span><strong id="live-accuracy">—</strong></div><div class="character-stats"><span><i class="correct-dot"></i>正確字元 <b id="live-correct">0</b></span><span><i class="error-dot"></i>錯誤字元 <b id="live-errors">0</b></span></div></div>
-            <button type="button" id="start-button" class="primary-button">開始練習 <span aria-hidden="true">↗</span></button>
-            <p class="start-note" id="start-note">輸入第一個字後，才開始計時。</p>
-          </aside>
-        </div>
-
-        <div class="practice-footnote"><p><span class="footnote-icon" aria-hidden="true">ⓘ</span> <span id="mode-note">{{modeNote}}</span></p><button type="button" data-dialog="scoring-dialog">計分方式 <span aria-hidden="true">↗</span></button></div>
-      </section>
-
-      <section class="practice-philosophy" aria-label="練習小提醒"><span class="philosophy-number">a note to yourself</span><p>不用急著更快。<span>先準確，再讓速度自然發生。</span></p><span class="philosophy-stamp" aria-hidden="true">日日<br>進步</span></section>
-
-      <section class="seo-copy" aria-label="關於中英文打字練習"><h2>{{seoHeading}}</h2><p>{{seoText}}</p><nav aria-label="所有練習模式">{{allLinks}}</nav></section>
-    </main>
-
-    <footer class="site-footer"><a class="footer-brand" href="{{root}}">字間 <span>ZIJIAN</span></a><p>給文字一點時間，也給自己一點空間。</p><div><button type="button" data-dialog="sources-dialog">文字來源</button><button type="button" data-dialog="privacy-dialog">隱私說明</button><span>© 2026 字間</span></div></footer>
-  </div>
-
-  <dialog id="custom-dialog" class="small-dialog"><form id="custom-form"><div class="dialog-top"><p class="eyebrow">YOUR OWN PACE</p><button type="button" class="close-button" data-close aria-label="關閉">×</button></div><h2>這次，想練習多久？</h2><p>給自己 1 到 60 分鐘的專注時間。</p><label for="custom-minutes">分鐘</label><input type="number" id="custom-minutes" min="1" max="60" step="1" required value="10"><p class="form-error" id="custom-error" role="alert"></p><button class="primary-button" type="submit">設定時間 <span>↗</span></button></form></dialog>
-  <dialog id="restart-dialog" class="small-dialog"><div class="dialog-top"><p class="eyebrow">A FRESH START</p><button type="button" class="close-button" data-close aria-label="關閉">×</button></div><h2>重新開始這次練習？</h2><p>這次尚未完成的輸入會清除。若想保留成績，請先選擇「結束練習」。</p><div class="dialog-actions"><button type="button" data-close class="secondary-button">繼續練習</button><button type="button" id="confirm-restart" class="primary-button">重新開始 ↻</button></div></dialog>
-  <dialog id="results-dialog" class="results-dialog"><div class="dialog-top"><p class="eyebrow">ONE PRACTICE, ONE STEP FORWARD.</p><button type="button" class="close-button" data-close aria-label="關閉結果">×</button></div><p class="result-overline" id="result-overline"></p><h2>每一次落下的字，<br>都是一點進步。</h2><div id="result-summary"></div><div class="result-actions"><button type="button" id="retry-button" class="primary-button">再練習一次 <span>↗</span></button><button type="button" id="export-button" class="secondary-button">下載詳細紀錄 ↓</button></div><p id="save-status" class="muted small" role="status"></p><details class="result-details"><summary>查看逐題紀錄與錯字 <span>＋</span></summary><div id="result-records"></div></details></dialog>
-  <dialog id="history-dialog" class="wide-dialog"><div class="dialog-top"><p class="eyebrow">YOUR PRACTICE JOURNAL</p><button type="button" class="close-button" data-close aria-label="關閉練習紀錄">×</button></div><h2>一點一滴，都有留下。</h2><p class="muted">保留此瀏覽器最近 50 次練習。點選一筆，可查看完整輸入紀錄。</p><div id="history-content"></div><div class="history-bottom"><span class="small muted">只儲存在這個瀏覽器，清除網站資料後會消失。</span><button type="button" id="clear-history" class="text-button danger">清除紀錄</button></div><div id="clear-history-prompt" hidden><p>確定清除全部練習紀錄？清除後無法復原。</p><button type="button" id="cancel-clear" class="secondary-button">保留紀錄</button> <button type="button" id="confirm-clear" class="secondary-button danger">確定清除</button></div></dialog>
-  <dialog id="guide-dialog"><div class="dialog-top"><p class="eyebrow">A SMALL GUIDE</p><button type="button" class="close-button" data-close aria-label="關閉使用指南">×</button></div><h2>找到你的練習節奏。</h2><ol class="guide-list"><li><b>選擇語言、模式與時間</b><p>中文使用繁體字，英文區分大小寫。時間可以選 1、3、5 分鐘，或自訂 1–60 分鐘。</p></li><li><b>第一個字落下，才開始計時</b><p>點「開始練習」聚焦輸入框，也可以直接打字。中文選字過程中的 Enter 不會送出題目，確認選字後再按 Enter。</p></li><li><b>照著文字輸入，按 Enter 送出</b><p>單字模式固定預覽 10 題，送出後補上下一題；文章模式逐句練習，包含標點、數字與空格。完成一篇後會接續下一篇。</p></li><li><b>打錯也沒關係</b><p>送出前可以修改，送出後會保留最終輸入與錯字。時間到自動結算已輸入的內容，也可以提前結束。</p></li></ol><p class="callout">測驗期間切換分頁，時間仍會繼續。請使用鍵盤輸入，測驗不接受貼上或拖入文字。</p></dialog>
-  <dialog id="scoring-dialog"><div class="dialog-top"><p class="eyebrow">EVERY CHARACTER COUNTS</p><button type="button" class="close-button" data-close aria-label="關閉計分說明">×</button></div><h2>速度之外，也看準確。</h2><dl class="definition-list"><dt>中文速度 · 字／分（CPM）</dt><dd>對齊後的正確字元數 ÷ 實際練習分鐘。文章中的標點、數字與句內空格，各算一個字元。</dd><dt>英文速度 · WPM</dt><dd>正確字元數 ÷ 5 ÷ 實際練習分鐘。以 5 字元折算一個標準單字，方便比較不同長度的文字。</dd><dt>正確率</dt><dd>正確字元 ÷（正確字元 ＋ 錯誤字元）× 100%。錯字、漏字與多打的字都算錯誤，使用文字對齊避免一個漏字讓後面全部算錯。</dd><dt>送出與時間到的差別</dt><dd>按 Enter 代表送出整題，未輸入的部分算漏字；時間到或提前結束時，僅結算當前已輸入的部分，未觸及的句尾不算漏字。尚在中文組字中的內容不計分。</dd><dt>紀錄哪些內容？</dt><dd>每題的題目、最終輸入、逐字比對與送出時間。不記錄刪除前的每一次按鍵；即時數據包含當前已確認的輸入，只有送出後才固定成績。</dd></dl><p class="callout">單字間的 Enter 與文章換句不計入字元；英文單字模式也可按空白鍵送出。不同語言、模式的速度不宜直接相比。</p></dialog>
-  <dialog id="sources-dialog" class="wide-dialog"><div class="dialog-top"><p class="eyebrow">WORDS FROM THE WORLD</p><button type="button" class="close-button" data-close aria-label="關閉文字來源">×</button></div><h2>文字，來自這裡。</h2><p>文章節錄自維基百科，由各條目的貢獻者共同撰寫，依 <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener noreferrer">CC BY-SA 4.0</a> 提供。節錄版本採相同授權；網站程式碼與文章內容分別管理。</p><p class="muted">節錄導言、移除註腳與換行並合併空白；中文採臺灣繁體轉換。每篇保留取得日期、版本與編輯歷史。單字題庫為本站自行編選。</p><div id="sources-content">{{allSources}}</div></dialog>
-  <dialog id="privacy-dialog"><div class="dialog-top"><p class="eyebrow">A LITTLE SPACE OF YOUR OWN</p><button type="button" class="close-button" data-close aria-label="關閉隱私說明">×</button></div><h2>你的練習，留在你這裡。</h2><p>字間將最近 50 次練習紀錄與輸入內容，儲存在你目前瀏覽器的 localStorage。網站沒有帳號、分析追蹤器或將輸入傳送至伺服器的功能。</p><p>練習紀錄不會跨裝置同步。你可以在「練習紀錄」清除資料，或下載單次測驗的 JSON 詳細紀錄。</p><p>若瀏覽器封鎖儲存空間或空間已滿，仍可練習與下載當次結果，但不會保留歷史。文章已隨網站收錄，測驗時不向維基百科發送請求。外部來源連結只會在你點選後開啟。</p><p>目前使用 Google Fonts 提供字型，開啟頁面時會向 Google 字型服務請求字型檔；服務無法連線時，會改用本機備援字型。</p><p class="muted">網站透過 GitHub Pages 提供，GitHub 會為安全用途記錄訪客的 IP 位址。</p></dialog>
-  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
-  <noscript><div class="noscript">打字計時與計分需要 JavaScript，請啟用後重新載入。本頁介紹與文章來源仍可閱讀。</div></noscript>
-</body>
-</html>
+<body data-language="{{language}}" data-mode="{{mode}}" data-root="{{root}}" data-ui="{{ui}}">
+<a class="skip-link" href="#practice">跳至打字練習</a>
+<div class="site-shell">
+<header class="site-header">
+<a class="brand" href="{{root}}{{uiPrefix}}" aria-label="字間，回到首頁"><span class="brand-mark" aria-hidden="true">字<span></span></span><span class="brand-name">字間<small>ZIJIAN</small></span></a>
+<nav class="main-nav" aria-label="主選單"><a class="nav-active" href="#practice">練習</a><button type="button" id="analysis-button">分析室</button><button type="button" id="history-button">紀錄 <span class="history-count" id="history-count">0</span></button></nav>
+<nav class="ui-language" aria-label="介面語言">{{uiLinks}}</nav>
+</header>
+<main>
+<section class="practice-section" id="practice" aria-labelledby="practice-title">
+<div class="page-heading"><h1 id="practice-title">{{practiceTitle}}</h1><span class="bank-count">{{bankCount}}</span></div>
+<div class="configuration" aria-label="練習設定">
+<div class="setting-group"><span class="setting-label">練習語言</span><nav class="segmented" aria-label="練習語言">{{languageLinks}}</nav></div>
+<div class="setting-group mode-setting"><span class="setting-label">練習內容</span><nav class="segmented" aria-label="練習內容">{{modeLinks}}</nav></div>
+<fieldset class="duration-setting"><legend class="setting-label">時間</legend><div class="duration-options"><button type="button" data-minutes="1" aria-pressed="false">1 <span>分鐘</span></button><button type="button" data-minutes="3" aria-pressed="true" class="selected">3 <span>分鐘</span></button><button type="button" data-minutes="5" aria-pressed="false">5 <span>分鐘</span></button><button type="button" id="custom-button" aria-pressed="false">自訂</button></div></fieldset>
+</div>
+<div class="workspace">
+<div class="typing-panel">
+<div class="panel-topline"><div class="panel-status"><span class="status-dot" id="status-dot"></span><span id="status-text">尚未開始</span></div><button type="button" id="shuffle-button" class="text-button"><span aria-hidden="true">↻</span> <span id="shuffle-label">換一組</span></button></div>
+<div id="article-picker-wrap" class="article-picker-wrap" {{articleHidden}}><label for="article-picker">文章</label><select id="article-picker">{{articleOptions}}</select><span id="sentence-counter" class="mono"></span></div>
+<div class="prompt-area" id="prompt-area" aria-label="練習題目">{{initialPrompt}}</div>
+<div class="article-source" id="article-source" {{articleHidden}}>{{articleSource}}</div>
+<div class="input-area"><div class="input-label-row"><label for="typing-input">{{inputLabel}}</label><span id="input-position" class="mono">{{inputPosition}}</span></div>
+<div class="input-wrap"><textarea id="typing-input" rows="1" aria-describedby="typing-hint input-feedback" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" placeholder="輸入第一個字開始計時" maxlength="600"></textarea><button type="button" id="submit-button" aria-label="送出" title="Enter 送出">↵</button></div>
+<div class="input-bottom"><p id="typing-hint">{{hint}}</p><span id="input-feedback" role="status" aria-live="polite"></span></div>
+</div><div id="recent-words" hidden></div>
+</div>
+<aside class="session-panel" aria-label="即時成績">
+<div class="timer-heading"><span>剩餘時間</span></div><div id="timer" class="timer" role="timer" aria-label="剩餘時間">03<span>:</span>00</div><div class="timer-track"><div id="timer-progress"></div></div>
+<div class="live-stats"><div><span>速度 <small id="speed-unit">{{speedUnit}}</small></span><strong id="live-speed">—</strong></div><div><span>正確率 <small>%</small></span><strong id="live-accuracy">—</strong></div><div class="character-stats"><span><i class="correct-dot"></i>正確 <b id="live-correct">0</b></span><span><i class="error-dot"></i>錯誤 <b id="live-errors">0</b></span></div></div>
+<button type="button" id="start-button" class="primary-button">開始 <span aria-hidden="true">↗</span></button><p id="start-note" class="sr-only"></p>
+</aside></div>
+</section>
+<details class="help-details"><summary>常見問題</summary><div class="faq-content">{{faq}}</div></details>
+</main>
+<footer class="site-footer"><span class="footer-brand">字間 <span>ZIJIAN</span></span><div><button type="button" data-dialog="guide-dialog">說明</button><button type="button" data-dialog="scoring-dialog">計分</button><button type="button" data-dialog="sources-dialog">來源</button><button type="button" data-dialog="privacy-dialog">隱私</button></div></footer>
+</div>
+<dialog id="custom-dialog" class="small-dialog"><form id="custom-form" novalidate><div class="dialog-top"><h2>自訂時間</h2><button type="button" class="close-button" data-close aria-label="關閉">×</button></div><label for="custom-minutes">分鐘（1–60）</label><input type="number" id="custom-minutes" min="1" max="60" step="1" required value="10"><p class="form-error" id="custom-error" role="alert"></p><button class="primary-button" type="submit">設定</button></form></dialog>
+<dialog id="restart-dialog" class="small-dialog"><div class="dialog-top"><h2>重新開始？</h2><button type="button" class="close-button" data-close aria-label="關閉">×</button></div><p>本次未完成的紀錄會清除。</p><div class="dialog-actions"><button type="button" data-close class="secondary-button">繼續</button><button type="button" id="confirm-restart" class="primary-button">重新開始</button></div></dialog>
+<dialog id="results-dialog" class="results-dialog"><div class="dialog-top"><h2>測驗結果</h2><button type="button" class="close-button" data-close aria-label="關閉結果">×</button></div><p class="result-overline" id="result-overline"></p><div id="result-summary"></div><div class="result-actions"><button type="button" id="retry-button" class="primary-button">再練一次</button><button type="button" id="export-button" class="secondary-button">下載 JSON</button></div><p id="save-status" class="muted small" role="status"></p><details class="result-details"><summary>逐題紀錄 <span>＋</span></summary><div id="result-records"></div></details></dialog>
+<dialog id="history-dialog" class="wide-dialog"><div class="dialog-top"><h2>練習紀錄</h2><button type="button" class="close-button" data-close aria-label="關閉練習紀錄">×</button></div><div id="history-content"></div><div class="history-bottom"><span class="small muted">此瀏覽器最近 50 次測驗</span><button type="button" id="clear-history" class="text-button danger">清除紀錄</button></div><div id="clear-history-prompt" hidden><p>確定清除全部紀錄？無法復原。</p><button type="button" id="cancel-clear" class="secondary-button">取消</button> <button type="button" id="confirm-clear" class="secondary-button danger">清除</button></div></dialog>
+<dialog id="analysis-dialog" class="analysis-dialog"><div class="dialog-top"><h2>分析室</h2><button type="button" class="close-button" data-close aria-label="關閉分析室">×</button></div>
+<div class="analysis-controls"><label>練習語言<select id="analysis-language"><option value="en">English</option><option value="zh">中文</option></select></label><label>資料<select id="analysis-source"><option value="characters">字元錯誤位置</option><option value="physical">錯題關聯鍵位</option></select></label><label>著色<select id="analysis-metric"><option value="count">錯誤次數</option><option value="rate">錯誤比例</option></select></label><button type="button" class="secondary-button" id="analysis-demo">看範例</button></div>
+<p class="analysis-note" id="analysis-note"></p><div id="analysis-summary" class="analysis-summary"></div><div class="keyboard-scroll"><div id="keyboard-map" class="keyboard-map" aria-label="鍵盤熱圖"></div></div><div id="heat-legend" class="heat-legend"></div><div id="key-detail" class="key-detail" aria-live="polite"></div><div id="analysis-pairs"></div>
+<details class="analysis-method"><summary>資料與計算方式</summary><div id="analysis-method"></div></details>
+</dialog>
+<dialog id="guide-dialog"><div class="dialog-top"><h2>使用說明</h2><button type="button" class="close-button" data-close aria-label="關閉使用說明">×</button></div><ol class="guide-list"><li>選擇練習語言、內容與時間。</li><li>輸入第一個字後開始倒數；中文組字開始也會計時。</li><li>單字列第二格為目標，按 Enter 送出。中文選字完成後再按一次；英文單字也可用空白鍵送出。</li><li>文章逐句輸入，包含標點、大小寫與句內空格。完成後接續下一篇。</li><li>打錯仍可送出；時間到自動結算，也可提前結束。</li></ol><p>測驗不接受貼上；切換分頁仍會繼續計時。測驗中無法切換語言或設定。</p></dialog>
+<dialog id="scoring-dialog"><div class="dialog-top"><h2>計分方式</h2><button type="button" class="close-button" data-close aria-label="關閉計分說明">×</button></div><dl class="definition-list"><dt>中文 · CPM</dt><dd>正確字元數 ÷ 實際練習分鐘。標點、數字與句內空格各算一個字元。</dd><dt>英文 · WPM</dt><dd>正確字元數 ÷ 5 ÷ 實際練習分鐘。</dd><dt>正確率</dt><dd>正確字元 ÷（正確字元 ＋ 錯誤字元）× 100%。比對包含錯字、漏字與多打的字。</dd><dt>未送出的內容</dt><dd>按 Enter 視為提交整題，缺少的字算漏字；時間到或提前結束只結算已輸入的部分。未完成的中文組字不計分。</dd></dl></dialog>
+<dialog id="sources-dialog" class="wide-dialog"><div class="dialog-top"><h2>文字來源</h2><button type="button" class="close-button" data-close aria-label="關閉文字來源">×</button></div>{{wordSources}}<h3>文章</h3><p>文章由 Wikipedia contributors 撰寫，節錄依 <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener noreferrer">CC BY-SA 4.0</a> 提供，修改內容沿用相同授權。</p><div id="sources-content">{{allSources}}</div></dialog>
+<dialog id="privacy-dialog"><div class="dialog-top"><h2>隱私說明</h2><button type="button" class="close-button" data-close aria-label="關閉隱私說明">×</button></div><p>測驗紀錄僅儲存在目前瀏覽器，保留最近 50 次；不提供帳號或跨裝置同步，也不傳送輸入內容至伺服器。</p><p>每題保留題目、最終輸入與按鍵位置的累計次數，用於分析室。不儲存逐次按鍵順序，僅在測驗輸入框中記錄；手機或輸入法未提供鍵位時不推估補值。</p><p>可在紀錄頁清除資料，或下載單次 JSON。儲存空間受限時仍可練習，但無法保留紀錄。</p><p>題庫隨網站提供。字型來自 Google Fonts；GitHub Pages 可能為安全用途記錄連線 IP。</p></dialog>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div><noscript><p class="noscript">測驗計時與計分需要啟用 JavaScript。</p></noscript>
+</body></html>
