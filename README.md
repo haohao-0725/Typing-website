@@ -65,7 +65,7 @@ main 的每次 push 會執行測試、建置並部署到 GitHub Pages。原本�
 Google Search Console 由網站擁有者手動操作：
 1. 新增網址前置字元資源：`https://haohao-0725.github.io/Typing-website/`。
 2. 若選 HTML 標記驗證，把提供的 content 值填入 site.config.json 的 googleSiteVerification，commit/push 後驗證。預設為空，不會生成假的驗證標記。
-3. 若選 HTML 檔案驗證，把 Google 提供的 google….html 原檔放入 public/；建置會另複製到網站根目錄，保留完整檔名與內容。
+3. 若選 HTML 檔案驗證，把 Google 提供的 google….html 原檔放入 public/；建置會另複製到網站根目錄與現有 `/zh/words/` 資源目錄，保留完整檔名與內容。驗證成功後仍需保留檔案。
 4. 驗證後提交 sitemap.xml，使用網址檢查工具檢查主要測驗頁。
 
 專案子目錄的 robots.txt 不取代網域根目錄 robots.txt。Google 實際選定的索引與排名應以 Search Console 報告為準。

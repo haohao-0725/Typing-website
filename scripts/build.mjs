@@ -28,9 +28,10 @@ await Promise.all([cp(resolve(root, 'src'), resolve(output, 'src'), { recursive:
   writeFile(resolve(output, '.nojekyll'), ''),
   writeFile(resolve(output, '404.html'), '<!doctype html><html lang="zh-Hant"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><meta name="robots" content="noindex"><title>找不到這個頁面｜字間</title><body style="font-family:sans-serif;background:#f6f5f0;color:#292e28;margin:10vw"><h1>這裡還沒有文字。</h1><p>請檢查網址，或用瀏覽器返回上一頁繼續練習。</p></body></html>')]);
 const robotContent = siteUrl ? `User-agent: *\nAllow: /\nSitemap: ${siteUrl}sitemap.xml\n` : 'User-agent: *\nAllow: /\n';
-// Search Console HTML-file verification must be at the property root, not /public/.
+// Keep verification files at the site root and the existing /zh/words/ property root.
 for (const filename of (await readdir(resolve(root, 'public'))).filter(name=>/^google[a-f0-9]{1,64}\.html$/.test(name))) {
   await cp(resolve(root, 'public', filename), resolve(output, filename));
+  await cp(resolve(root, 'public', filename), resolve(output, 'zh/words', filename));
 }
 await writeFile(resolve(output, 'robots.txt'), robotContent);
 if (siteUrl) {
