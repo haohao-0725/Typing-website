@@ -3,6 +3,7 @@ import { words } from '../src/words.js';
 import { renderWordStrip } from '../src/word-strip.js';
 import { WORD_PREVIEW_COUNT } from '../src/engine.js';
 import { translate, translateMarkup } from '../src/i18n.js';
+import { appendixMarkup } from './appendix.mjs';
 export const rootDirectory = new URL('../', import.meta.url);
 export const practiceRoutes = ['zh/words/', 'zh/articles/', 'en/words/', 'en/articles/'];
 export const routes = ['', ...practiceRoutes, 'en-ui/', ...practiceRoutes.map(route=>'en-ui/'+route)];
@@ -65,7 +66,8 @@ export function renderPage(route='',siteUrl='',sourceTemplate=template) {
   speedUnit:language==='zh'?t('字／分'):'WPM',
   faq:faq.map(([question,answer])=>'<h2>'+question+'</h2><p>'+answer+'</p>').join(''),
   wordSources:'<h3>'+t('單字')+'</h3><p>'+t('中英文各 5,000 個去重詞彙。詞庫資料以 CC BY-SA 4.0 提供，程式碼授權與資料分開管理。')+'</p><p>'+t('保留原始編選詞彙；中文使用 CC-CEDICT 正體詞條，依 wordfreq 詞頻選取；英文由 wordfreq 選取並去重。')+'</p><p><a href="'+root+'public/word-sources.json" target="_blank" rel="noopener noreferrer">'+t('查看完整詞庫來源與授權')+' ↗</a> · <a href="'+root+'public/licenses/cc-cedict-notice.txt" target="_blank" rel="noopener noreferrer">CC-CEDICT</a> · <a href="'+root+'public/licenses/wordfreq-notice.md" target="_blank" rel="noopener noreferrer">wordfreq</a></p>',
-  allSources:articles.map(a=>sourceMarkup(a,ui)).join('')
+  allSources:articles.map(a=>sourceMarkup(a,ui)).join(''),
+  appendix:appendixMarkup(ui)
  };
  return translateMarkup(sourceTemplate,ui).replace(/\{\{(\w+)\}\}/g,(_,key)=>{if(!(key in tokens))throw new Error('Unknown template token: '+key);return tokens[key];});
 }
