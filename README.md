@@ -1,6 +1,8 @@
 # 字間 ZIJIAN
 
-安靜、俐落的中英文打字練習室。原始碼 repository：[haohao-0725/Typing-website](https://github.com/haohao-0725/Typing-website)。目前可在本機執行，尚未啟用 GitHub Pages 部署。
+安靜、俐落的中英文打字練習室。
+
+**網站：[字間 ZIJIAN](https://haohao-0725.github.io/Typing-website/)** · [原始碼](https://github.com/haohao-0725/Typing-website) · [部署狀態](https://github.com/haohao-0725/Typing-website/actions/workflows/pages.yml)
 
 ## 在本機開啟
 
@@ -69,24 +71,30 @@ npm run preview  # 在 http://127.0.0.1:4173/ 檢查 dist/
 
 可手動執行 `npm run content:refresh` 更新題庫。這不是建置或測驗的必要步驟；正式上線前應人工檢閱新版本文字，避免 Wikipedia 編輯造成題目突然變動。測驗時讀取已收錄的本地文章，不呼叫 Wikimedia API。
 
-## 後續部署 GitHub Pages
+## GitHub Pages 自動部署
 
-尚未設定網域或 GitHub repository，所以目前不產生虛構 canonical／sitemap。確認實際網址後，例如 `https://yourname.github.io/typing/`：
+正式網址為 `https://haohao-0725.github.io/Typing-website/`。Pages 使用 GitHub Actions 作為發佈來源，每次 push 到 `main` 或手動執行 `Deploy GitHub Pages`，會自動：
+
+1. 使用 Node.js 24 執行測試。
+2. 從 Pages 設定讀取正式網址，透過 `SITE_URL` 建置靜態 HTML、canonical 與 sitemap。
+3. 上傳 `dist/`，測試與建置成功後部署至 `github-pages` 環境。
+
+流程位於 `.github/workflows/pages.yml`，官方 Actions 固定至已確認的 commit。無須手動維護 `gh-pages` 分支，也不用把 `dist/` 加進 Git。若要在本機檢查正式網址設定：
 
 ```powershell
-$env:SITE_URL = 'https://yourname.github.io/typing/'
+$env:SITE_URL = 'https://haohao-0725.github.io/Typing-website/'
 npm test
 npm run build
 ```
 
 將 `dist/` 作為 GitHub Pages 發佈成品。所有資源與導覽使用相對路徑，可放在根網域或 repository 子目錄。首頁 canonical 指向 `/zh/words/`，避免和中文單字頁重複；sitemap 收錄四種主要模式。
 
-正式發佈時，會再設定 GitHub Pages 發佈流程、必要的網域資訊，並提交 Google Search Console。GitHub repository 的存在本身不會自動建立網站；也不保證 Google 何時收錄或排名。
+網站 sitemap 位於 [sitemap.xml](https://haohao-0725.github.io/Typing-website/sitemap.xml)。Google Search Console 的所有權驗證與提交尚未設定；網站公開後 Google 可能自行發現，仍不保證收錄時間或排名。
 
 ## 隱私與現階段限制
 
 無登入、後台、遠端排行榜、第三方分析或跨裝置同步。輸入與測驗紀錄僅存在瀏覽器 localStorage；清除網站資料會移除。瀏覽器儲存空間不足時不會繼續寫入歷史，介面會提示下載。
 
-目前字型透過 Google Fonts 載入，因此初次開啟需要向 Google 字型服務請求字型；失敗時使用本機備援字型，練習功能不受影響。若要完全不依賴第三方資源，可在公開前將字型轉為自託管。正式主機服務仍可能記錄連線資訊。
+目前字型透過 Google Fonts 載入，因此初次開啟需要向 Google 字型服務請求字型；失敗時使用本機備援字型，練習功能不受影響。若要完全不依賴第三方資源，可將字型轉為自託管。網站透過 GitHub Pages 託管，GitHub 會為安全用途記錄訪客 IP 位址。
 
 輸入法已包含瀏覽器組字事件的防護與自動事件測試；仍應在你實際使用的注音、倉頡、嘸蝦米或其他輸入法上確認選字手感。手機能操作，但軟體鍵盤的自動改字可能影響測驗，比較成績時建議使用同一裝置與輸入法。
