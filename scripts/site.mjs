@@ -52,7 +52,7 @@ export function renderPage(route='',siteUrl='',sourceTemplate=template) {
   ['英文介面可以練中文嗎？','可以。介面語言與練習語言分開切換；中文題目使用繁體字，支援輸入法組字與選字。'],
   ['成績與鍵盤紀錄儲存在哪裡？','最近 50 次測驗與鍵位累計次數只留在目前瀏覽器，不上傳。可在紀錄頁清除，或下載單次 JSON。']
  ];
- const tokens={root,ui,language,mode,uiPrefix,htmlLang:ui==='en'?'en':'zh-Hant-TW',title,description,seo,practiceTitle,
+ const tokens={themeDark:t('切換深色模式'),themeLight:t('切換淺色模式'),root,ui,language,mode,uiPrefix,htmlLang:ui==='en'?'en':'zh-Hant-TW',title,description,seo,practiceTitle,
   bankCount:t(mode==='words'?'共 {count} 詞':'共 {count} 篇',{count:new Intl.NumberFormat(ui==='en'?'en-US':'zh-TW').format(mode==='words'?words[language].length:localArticles.length)}),
   uiLinks:[['zh','繁中',''],['en','EN','en-ui/']].map(([locale,label,prefix])=>'<a href="'+root+prefix+practiceRoute+'"'+(ui===locale?' aria-current="page"':'')+'>'+label+'</a>').join(''),
   languageLinks:link('zh',mode,t('中文'),language==='zh')+link('en',mode,'English',language==='en'),

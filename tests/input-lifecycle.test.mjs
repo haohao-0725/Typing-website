@@ -17,7 +17,7 @@ class Element extends EventTarget {
   blur() { if (document.activeElement === this) document.activeElement = null; }
   select() {}
   showModal() { this.open = true; this.firstFocusable?.focus(); }
-  close() { this.open = false; }
+  close() { this.open = false; this.dispatchEvent(new Event('close')); }
 }
 
 let run = 0;
@@ -33,7 +33,9 @@ async function fixture(callback, options = {}) {
   resultClose.closest = () => get('#results-dialog');
   // Model the browser's normal first-button focus when a dialog opens.
   get('#results-dialog').firstFocusable = resultClose;
-  const groups = { '[data-dialog]':[], '[data-close]':[resultClose], 'dialog':[get('#results-dialog')], '.segmented a':links,
+  const deleteCancel = get('#cancel-delete-session');
+  deleteCancel.closest = () => get('#delete-session-dialog');
+  const groups = { '[data-dialog]':[], '[data-close]':[resultClose,deleteCancel], 'dialog':[get('#results-dialog')], '.segmented a':links,
     '.duration-options button':[...duration, custom], '[data-minutes]':duration };
   const documentFixture = new EventTarget();
   documentFixture.body = { dataset:{language:options.language || 'zh', mode:'words', ui:options.ui || 'zh'} };
@@ -182,4 +184,25 @@ test('recorded keyboard counts survive submission, reset per answer, and coexist
     assert.deepEqual(records[1].keyUsage,{KeyB:1});
     assert.equal(get('#save-status').textContent,'Saved in this browser.');
   },{language:'en',ui:'en'});
+});
+
+test('single-test deletion can be cancelled, then removes only the selected record and updates the count', async () => {
+  await fixture(({get,fire,word,type,enter,advance,saved})=>{
+    type(word());enter();advance(2000);fire('#start-button','click');
+    const first=saved()[0].id;
+    fire('#retry-button','click');
+    type(word());enter();advance(3000);fire('#start-button','click');
+    const second=saved()[0].id;
+    fire('#results-dialog [data-close]','click');fire('#history-button','click');
+    assert.equal(get('#history-count').textContent,2);
+    get('#history-content').closest=selector=>selector==='[data-delete-session]'?{dataset:{deleteSession:first}}:null;
+    fire('#history-content','click');
+    assert.equal(get('#delete-session-dialog').open,true);
+    fire('#cancel-delete-session','click');assert.equal(saved().length,2);
+    fire('#history-content','click');fire('#confirm-delete-session','click');
+    assert.equal(get('#delete-session-dialog').open,false);
+    assert.deepEqual(saved().map(s=>s.id),[second]);
+    assert.equal(get('#history-count').textContent,1);
+    assert.ok(!get('#history-content').innerHTML.includes(first));
+  },{ui:'en',language:'en'});
 });

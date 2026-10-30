@@ -1,4 +1,5 @@
 export const english = {
+ '深色模式':'Dark mode','切換深色模式':'Switch to dark mode','切換淺色模式':'Switch to light mode','輸入這題':'Type this','刪除':'Delete','刪除此筆紀錄？':'Delete this test?','刪除後無法復原。':'This cannot be undone.','已移除此筆紀錄。':'Test deleted.','無法移除此筆紀錄。':'Could not delete this test.',
  '跳至打字練習':'Skip to practice','字間，回到首頁':'ZIJIAN home','主選單':'Main navigation','練習':'Practice','分析室':'Analysis','紀錄':'History','介面語言':'Interface language',
  '練習設定':'Practice settings','練習語言':'Practice language','練習內容':'Content','時間':'Duration','分鐘':'min','自訂':'Custom','尚未開始':'Ready','換一組':'New set','文章':'Passages',
  '練習題目':'Practice prompts','輸入第一個字開始計時':'Type to start the timer','送出':'Submit','Enter 送出':'Enter to submit','即時成績':'Live results','剩餘時間':'Time left','速度':'Speed','正確率':'Accuracy','正確':'Correct','錯誤':'Errors','開始':'Start',

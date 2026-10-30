@@ -1,6 +1,6 @@
 import { words } from './words.js';
 import { WordQueue, chars, compareText, summarize, splitSentences, remainingMilliseconds, validateMinutes } from './engine.js';
-import { loadSessions, saveSession, clearSessions } from './storage.js';
+import { loadSessions, saveSession, clearSessions, deleteSession } from './storage.js';
 import { renderWordStrip } from './word-strip.js';
 import { translate } from './i18n.js';
 import { recordKey } from './analytics.js';
@@ -22,6 +22,7 @@ let records = [], composing = false, committedDraft = '', composingStartValue = 
 let compositionJustEnded = false, interval, toastTimeout, selectedArticle = 0, sentenceIndex = 0;
 let sentences = [], previousSentence = '', currentResult = null;
 let articleLoading = mode === 'articles';
+let pendingDeleteId = null;
 
 function toast(message) {
   $('#toast').textContent = message; $('#toast').hidden = false;
@@ -190,8 +191,9 @@ function showResult(result,message=t('已儲存的測驗紀錄。')) {
 function updateHistoryCount() { $('#history-count').textContent=loadSessions().length; }
 function showHistory() {
  const sessions=loadSessions();
+ $('#history-feedback').textContent='';
  $('#clear-history-prompt').hidden=true;$('#clear-history').disabled=!sessions.length;
- $('#history-content').innerHTML=sessions.length?`<div class="history-scroll"><table class="history-table"><thead><tr>${['練習時間','內容','速度','正確率','紀錄'].map(label=>`<th>${t(label)}</th>`).join('')}</tr></thead><tbody>${sessions.map((entry,i)=>`<tr><td>${new Intl.DateTimeFormat(ui==='en'?'en-US':'zh-TW',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date(entry.date))}</td><td>${t(entry.language==='zh'?'中文':'英文')} · ${t(entry.mode==='words'?'單字':'文章')}</td><td>${Number(entry.speed).toFixed(1)} ${entry.language==='zh'?t('字／分'):'WPM'}</td><td>${Number(entry.accuracy).toFixed(1)}%</td><td><button type="button" data-session="${i}">${t('查看')} ↗</button></td></tr>`).join('')}</tbody></table></div>`:`<div class="empty-journal">${t('尚無練習紀錄。')}</div>`;
+ $('#history-content').innerHTML=sessions.length?`<div class="history-scroll"><table class="history-table"><thead><tr>${['練習時間','內容','速度','正確率','紀錄'].map(label=>`<th>${t(label)}</th>`).join('')}</tr></thead><tbody>${sessions.map((entry,i)=>`<tr><td>${new Intl.DateTimeFormat(ui==='en'?'en-US':'zh-TW',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date(entry.date))}</td><td>${t(entry.language==='zh'?'中文':'英文')} · ${t(entry.mode==='words'?'單字':'文章')}</td><td>${Number(entry.speed).toFixed(1)} ${entry.language==='zh'?t('字／分'):'WPM'}</td><td>${Number(entry.accuracy).toFixed(1)}%</td><td class="history-actions"><button type="button" data-session="${i}">${t('查看')} ↗</button><button type="button" class="danger" data-delete-session="${escapeHtml(entry.id)}">${t('刪除')}</button></td></tr>`).join('')}</tbody></table></div>`:`<div class="empty-journal">${t('尚無練習紀錄。')}</div>`;
  openDialog('history-dialog');
 }
 
@@ -276,8 +278,26 @@ $('#custom-form').addEventListener('submit', event => {
 $('#article-picker').addEventListener('change', () => { selectedArticle = articleLibrary.findIndex(a => a.id === $('#article-picker').value); reset(); });
 $('#history-button').addEventListener('click', showHistory);
 $('#history-content').addEventListener('click', event => {
+  const remove = event.target.closest('[data-delete-session]');
+  if (remove) {
+    const session = loadSessions().find(entry => entry.id === remove.dataset.deleteSession);
+    if (!session) return;
+    pendingDeleteId = session.id;
+    $('#delete-session-summary').textContent = `${new Intl.DateTimeFormat(ui==='en'?'en-US':'zh-TW',{dateStyle:'medium',timeStyle:'short'}).format(new Date(session.date))} · ${t(session.language==='zh'?'中文':'英文')} · ${t(session.mode==='words'?'單字':'文章')} · ${session.speed} ${session.language==='zh'?t('字／分'):'WPM'}`;
+    openDialog('delete-session-dialog'); $('#cancel-delete-session').focus();
+    return;
+  }
   const button = event.target.closest('[data-session]');
   if (button) { const session = loadSessions()[Number(button.dataset.session)]; if (session) { closeDialog('history-dialog'); showResult(session); } }
+});
+$('#delete-session-dialog').addEventListener('close', () => { pendingDeleteId = null; });
+$('#confirm-delete-session').addEventListener('click', () => {
+  if (!pendingDeleteId) return;
+  const deleted = deleteSession(pendingDeleteId);
+  closeDialog('delete-session-dialog'); pendingDeleteId = null;
+  if (deleted) {
+    updateHistoryCount(); showHistory(); $('#history-title').focus(); $('#history-feedback').textContent=t('已移除此筆紀錄。');
+  } else $('#history-feedback').textContent=t('無法移除此筆紀錄。');
 });
 $('#clear-history').addEventListener('click', () => { $('#clear-history-prompt').hidden = false; $('#cancel-clear').focus(); });
 $('#cancel-clear').addEventListener('click', () => { $('#clear-history-prompt').hidden = true; $('#clear-history').focus(); });
