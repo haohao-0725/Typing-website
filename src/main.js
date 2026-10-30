@@ -183,6 +183,9 @@ function showResult(result,message=t('已儲存的測驗紀錄。')) {
  $('#retry-button').textContent=t(phase==='running'?'繼續目前練習':'再練一次');
  $('#result-records').innerHTML=result.records.length?`<p class="record-key">${t('綠色：正確；紅色：錯字或多打；刪除線：漏字；␣：空格。')}</p>`+result.records.map(recordMarkup).join(''):`<p class="muted">${t('沒有已確認的輸入。')}</p>`;
  $('.result-details').open=false;openDialog('results-dialog');
+ // Timeout can interrupt a stream of Enter/Space presses. Start on a neutral
+ // heading rather than a button, so those presses cannot dismiss the result.
+ $('#results-title').focus();
 }
 function updateHistoryCount() { $('#history-count').textContent=loadSessions().length; }
 function showHistory() {

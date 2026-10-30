@@ -13,8 +13,11 @@ class Element extends EventTarget {
   }
   setAttribute(key, value) { this.attributes.set(key, value); }
   removeAttribute(key) { this.attributes.delete(key); }
-  focus() {} blur() {} select() {}
-  showModal() { this.open = true; } close() { this.open = false; }
+  focus() { document.activeElement = this; }
+  blur() { if (document.activeElement === this) document.activeElement = null; }
+  select() {}
+  showModal() { this.open = true; this.firstFocusable?.focus(); }
+  close() { this.open = false; }
 }
 
 let run = 0;
@@ -26,7 +29,11 @@ async function fixture(callback, options = {}) {
   const duration = [1, 3, 5].map(n => { const el = new Element(); el.dataset.minutes = String(n); return el; });
   const custom = get('#custom-button'); custom.id = 'custom-button';
   const links = [new Element(), new Element()];
-  const groups = { '[data-dialog]':[], '[data-close]':[], 'dialog':[], '.segmented a':links,
+  const resultClose = get('#results-dialog [data-close]');
+  resultClose.closest = () => get('#results-dialog');
+  // Model the browser's normal first-button focus when a dialog opens.
+  get('#results-dialog').firstFocusable = resultClose;
+  const groups = { '[data-dialog]':[], '[data-close]':[resultClose], 'dialog':[get('#results-dialog')], '.segmented a':links,
     '.duration-options button':[...duration, custom], '[data-minutes]':duration };
   const documentFixture = new EventTarget();
   documentFixture.body = { dataset:{language:options.language || 'zh', mode:'words', ui:options.ui || 'zh'} };
@@ -47,7 +54,14 @@ async function fixture(callback, options = {}) {
   };
   try {
     await import(`../src/main.js?fixture=${++run}`);
-    await callback({ get, fire, duration,
+    await callback({ get, fire, duration, active:() => documentFixture.activeElement,
+      press:key => {
+        const focused = documentFixture.activeElement;
+        const event = new Event('keydown', {cancelable:true}); Object.assign(event,{key,keyCode:key==='Enter'?13:32,isComposing:false});
+        focused.dispatchEvent(event);
+        // Native button activation is the behavior behind the reported bug.
+        if (!event.defaultPrevented && ['Enter',' '].includes(key) && [resultClose,get('#retry-button'),get('#export-button')].includes(focused)) focused.dispatchEvent(new Event('click'));
+      },
       word:() => get('#prompt-area').innerHTML.match(/<li class="word-current[^>]*>[\s\S]*?<strong>([^<]+)<\/strong>/)[1],
       type:value => { get('#typing-input').value = value; fire('#typing-input', 'input'); },
       enter:() => fire('#typing-input', 'keydown', {key:'Enter', keyCode:13, isComposing:false}),
@@ -86,6 +100,33 @@ test('deadline during composition counts the previously committed snapshot and s
     assert.equal(saved()[0].records[0].partial, true); assert.equal(saved()[0].errors, 0);
     get('#typing-input').value = expected; fire('#typing-input', 'compositionend');
     advance(5000); assert.equal(saved().length, 1); assert.equal(saved()[0].typed, 1);
+  });
+});
+
+test('timeout results survive continued Enter/Space presses; closing requires selecting the close button', async () => {
+  await fixture(({get,word,type,advance,press,active,saved}) => {
+    get('#typing-input').focus(); type(word()); advance(180000);
+    assert.equal(get('#results-dialog').open,true);
+    assert.equal(active(),get('#results-title'));
+    for(const key of ['Enter','Enter',' ','Enter']) press(key);
+    assert.equal(get('#results-dialog').open,true);
+    assert.equal(get('#typing-input').disabled,true);
+    assert.equal(saved().length,1);
+    get('#results-dialog [data-close]').focus(); press('Enter');
+    assert.equal(get('#results-dialog').open,false);
+  });
+});
+
+test('Enter arriving after the deadline opens results without activating a dialog button', async () => {
+  await fixture(({get,word,type,enter,press,active,saved}) => {
+    get('#typing-input').focus(); type(word());
+    const currentNow=Date.now; Date.now=()=>currentNow()+180500;
+    try { assert.equal(enter().defaultPrevented,true); } finally { Date.now=currentNow; }
+    assert.equal(active(),get('#results-title'));
+    press('Enter');
+    assert.equal(get('#results-dialog').open,true);
+    assert.equal(saved().length,1);
+    assert.equal(saved()[0].reason,'timeout');
   });
 });
 
