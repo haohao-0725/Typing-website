@@ -1,4 +1,13 @@
 export const english = {
+ '同音通過':'Accept homophones','含聲調':'Same tone','✓ 同音通過':'✓ Homophone accepted',
+ '不必挑字，例如「地獄」輸入「地域」也算正確。':'Skip candidate selection: 地域 is accepted for 地獄.',
+ '同音含聲調即可；確認輸入法文字後，再按 Enter 送出。':'Match the sound and tone; confirm IME text, then press Enter to submit.',
+ '讀音資料載入失敗，請重新整理後再試。':'Could not load pronunciation data. Reload to retry.',
+ '點底線：同音通過。':'Dotted underline: accepted homophone.',
+ '僅限中文單字，預設關閉。勾選後，漢字讀音與聲調符合題目就算正確；仍需確認輸入法文字。多音字以題目詞語讀音為準，輸入字任一收錄讀音符合即可；未知字、標點、漏字與多字仍照原規則。':'Chinese words only, off by default. Characters matching the target sound and tone count as correct; IME text must still be confirmed. Target readings follow the whole word; any listed reading of an entered character may match. Unknown characters, punctuation, omissions and additions follow the usual rules.',
+ '同音通過讀音資料':'Homophone pronunciation data',
+ '使用小麥注音的漢字與詞語讀音，並補充題庫詞語讀音；保留聲調。資料隨網站提供，在瀏覽器內比對。':'Character and word readings from McBopomofo, supplemented with prompt readings and retaining tones. Data is bundled and compared in your browser.',
+ '查看讀音資料來源':'Pronunciation sources',
  '深色模式':'Dark mode','切換深色模式':'Switch to dark mode','切換淺色模式':'Switch to light mode','輸入這題':'Type this','刪除':'Delete','刪除此筆紀錄？':'Delete this test?','刪除後無法復原。':'This cannot be undone.','已移除此筆紀錄。':'Test deleted.','無法移除此筆紀錄。':'Could not delete this test.',
  '跳至打字練習':'Skip to practice','字間，回到首頁':'ZIJIAN home','主選單':'Main navigation','練習':'Practice','分析室':'Analysis','紀錄':'History','介面語言':'Interface language',
  '練習設定':'Practice settings','練習語言':'Practice language','練習內容':'Content','時間':'Duration','分鐘':'min','自訂':'Custom','尚未開始':'Ready','換一組':'New set','文章':'Passages',

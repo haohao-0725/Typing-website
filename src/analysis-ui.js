@@ -40,7 +40,7 @@ export function initializeAnalysis({ui='zh',language='zh',document:doc=globalThi
   $('#key-detail').textContent=usable?c.select:c.empty;
   if(usable&&selected) detail();
   $('#analysis-pairs').innerHTML=result.pairs.length?`<h3>${c.pairs}</h3><table class="pair-table"><thead><tr><th>${c.target}</th><th>${c.times}</th></tr></thead><tbody>${result.pairs.map(p=>`<tr><td>${escape(p.pair[0]||'∅')} → ${escape(p.pair[1]||'∅')}</td><td>${p.count}</td></tr>`).join('')}</tbody></table>`:'';
-  $('#analysis-method').innerHTML=`<p>${source==='physical'?c.methodPhysical:c.methodChars}</p><p>${c.methodScope}</p>`;
+  $('#analysis-method').innerHTML=`<p>${source==='physical'?c.methodPhysical:c.methodChars}</p><p>${c.methodScope}</p><p>${ui==='en'?'Each test follows its original scoring mode. Accepted homophones in Chinese word tests are not counted as errors.':'各次測驗沿用當次判分模式；中文單字開啟「同音通過」時，已接受的同音字不計為錯誤。'}</p>`;
  }
  $('#analysis-button').addEventListener('click',()=>{demo=false;selected=null;$('#analysis-language').value=language;$('#analysis-source').value=language==='zh'?'physical':'characters';render();dialog.showModal();});
  controls.forEach(id=>$(id).addEventListener('change',()=>{selected=null;render();}));

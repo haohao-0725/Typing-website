@@ -2,6 +2,7 @@
 // fixture tests the production controller without introducing runtime packages.
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { words } from '../src/words.js';
 
 class Element extends EventTarget {
   constructor() {
@@ -24,6 +25,8 @@ let run = 0;
 async function fixture(callback, options = {}) {
   const original = Object.fromEntries(['document', 'window', 'localStorage', 'setInterval', 'clearInterval', 'setTimeout', 'clearTimeout'].map(k => [k, globalThis[k]]));
   const originalNow = Date.now;
+  const originalRandom = Math.random, originalBank = words[options.language || 'zh'];
+  if (options.bank) { words[options.language || 'zh'] = options.bank; Math.random = () => 0; }
   const elements = new Map();
   const get = selector => { if (!elements.has(selector)) elements.set(selector, new Element()); return elements.get(selector); };
   const duration = [1, 3, 5].map(n => { const el = new Element(); el.dataset.minutes = String(n); return el; });
@@ -71,7 +74,7 @@ async function fixture(callback, options = {}) {
       flushTimeouts:() => { for (const fn of [...timeouts]) fn(); timeouts.clear(); },
       saved:() => JSON.parse(saved || '[]'),
     });
-  } finally { Date.now = originalNow; Object.assign(globalThis, original); }
+  } finally { Date.now = originalNow; Math.random = originalRandom; words[options.language || 'zh'] = originalBank; Object.assign(globalThis, original); }
 }
 
 test('start button only focuses; composition Enter does not submit; confirmed text submits once', async () => {
@@ -205,4 +208,65 @@ test('single-test deletion can be cancelled, then removes only the selected reco
     assert.equal(get('#history-count').textContent,1);
     assert.ok(!get('#history-content').innerHTML.includes(first));
   },{ui:'en',language:'en'});
+});
+
+const phoneticBank = ['地獄', '地域', '銀行', '音樂', '快樂'];
+test('homophone option defaults off and strict scoring is preserved without opting in', async () => {
+  await fixture(({ get, fire, word, type, enter, advance, saved }) => {
+    assert.equal(get('#homophone-option').checked, false);
+    assert.equal(word(), '地獄');
+    type('地域'); enter(); advance(1000); fire('#start-button', 'click');
+    assert.equal(saved()[0].errors, 1);
+    assert.equal(saved()[0].scoringMode, 'exact');
+  }, { bank: phoneticBank });
+});
+
+test('opt-in homophones survive IME confirmation, locking, results and history replay', async () => {
+  await fixture(({ get, fire, word, type, enter, advance, flushTimeouts, saved }) => {
+    assert.equal(word(), '地獄');
+    get('#homophone-option').checked = true; fire('#homophone-option', 'change');
+    assert.ok(get('#typing-hint').textContent.includes('同音'));
+    fire('#typing-input', 'compositionstart'); type('ㄉㄧˋ ㄩˋ');
+    assert.equal(get('#homophone-option').disabled, true);
+    get('#homophone-option').checked = false; fire('#homophone-option', 'change');
+    assert.equal(get('#homophone-option').checked, true);
+    get('#typing-input').value = '地域'; fire('#typing-input', 'compositionend');
+    enter(); assert.equal(word(), '地獄');
+    flushTimeouts(); enter();
+    assert.ok(get('#prompt-area').innerHTML.includes('✓ 同音通過'));
+    advance(1000); fire('#start-button', 'click');
+    const result = saved()[0];
+    assert.equal(result.accuracy, 100); assert.equal(result.errors, 0);
+    assert.equal(result.scoringMode, 'homophone'); assert.equal(result.scoringVersion, 2);
+    assert.ok(result.phoneticDataVersion);
+    assert.ok(get('#result-records').innerHTML.includes('class="correct homophone"'));
+    assert.ok(get('#result-overline').textContent.includes('同音通過'));
+    fire('#results-dialog [data-close]', 'click'); fire('#history-button', 'click');
+    assert.ok(get('#history-content').innerHTML.includes('同音通過'));
+    get('#history-content').closest = selector => selector === '[data-session]' ? { dataset: { session: '0' } } : null;
+    fire('#history-content', 'click');
+    assert.ok(get('#result-records').innerHTML.includes('class="correct homophone"'));
+    get('#homophone-option').checked = false; fire('#homophone-option', 'change');
+    assert.equal(get('#typing-input').disabled, false);
+    assert.ok(!get('#typing-hint').textContent.includes('同音'));
+  }, { bank: phoneticBank });
+});
+
+test('homophone timeout scores only the committed prefix, excluding unfinished composition', async () => {
+  await fixture(({ get, fire, type, advance, saved }) => {
+    get('#homophone-option').checked = true; fire('#homophone-option', 'change');
+    type('第'); fire('#typing-input', 'compositionstart'); type('第ㄩ');
+    advance(180001);
+    const result = saved()[0];
+    assert.equal(result.correct, 1); assert.equal(result.errors, 0);
+    assert.equal(result.records[0].actual, '第'); assert.equal(result.records[0].partial, true);
+  }, { bank: phoneticBank });
+});
+
+test('English words keep exact scoring even if an unrelated checkbox is manipulated', async () => {
+  await fixture(({ get, fire, word, type, enter, advance, saved }) => {
+    get('#homophone-option').checked = true; fire('#homophone-option', 'change');
+    type(word().toUpperCase()); enter(); advance(1000); fire('#start-button', 'click');
+    assert.equal(saved()[0].scoringMode, 'exact'); assert.ok(saved()[0].errors > 0);
+  }, { language: 'en', ui: 'en' });
 });

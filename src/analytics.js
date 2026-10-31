@@ -1,4 +1,4 @@
-import { compareText } from './engine.js';
+import { recordComparison } from './scoring.js';
 
 export const keyboardRows = [
  [['Backquote','`'],...Array.from({length:9},(_,i)=>[`Digit${i+1}`,`${i+1}`]),['Digit0','0'],['Minus','-'],['Equal','='],['Backspace','⌫',2]],
@@ -33,7 +33,7 @@ export function analyzeSessions(sessions,{language='en',source='characters'}={})
    if(source==='physical' && record.partial) continue;
    if(typeof record.expected!=='string'||typeof record.actual!=='string'||record.expected.length>1200||record.actual.length>1200) continue;
    recordCount++;
-   const comparison=compareText(record.expected,record.actual,{partial:record.partial});
+   const comparison=recordComparison(record,session);
    for(const operation of comparison.operations) {
     if(operation.type!=='correct') {
      const pair=JSON.stringify([operation.expected,operation.actual]);

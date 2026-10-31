@@ -9,7 +9,7 @@ export function renderWordStrip(upcoming, previous = null, ui = 'zh') {
   const t=(message,params={})=>translate(message,ui,params);
   if (upcoming.length !== WORD_PREVIEW_COUNT) throw new Error('Expected five pending words');
   const status = previous ? previous.comparison.errors ? 'is-wrong' : 'is-correct' : 'is-empty';
-  const statusText = t(previous ? previous.comparison.errors ? '× 錯誤' : '✓ 正確' : '上一題');
+  const statusText = t(previous ? previous.comparison.errors ? '× 錯誤' : previous.comparison.operations?.some(op=>op.homophone) ? '✓ 同音通過' : '✓ 正確' : '上一題');
   const previousTitle = previous ? t('題目：{expected}｜輸入：{actual}',{expected:previous.expected,actual:previous.actual}) : t('完成第一題後顯示結果');
   const prior = `<li class="word-previous ${status}" title="${escapeHtml(previousTitle)}"><span class="word-label">${statusText}</span><strong>${previous ? escapeHtml(previous.expected) : '—'}</strong></li>`;
   const pending = upcoming.map((word, i) => `<li class="${i === 0 ? 'word-current' : 'word-upcoming'}${chars(word).length > 2 ? ' word-long' : ''}"${i === 0 ? ' aria-current="step"' : ''}><span class="word-label">${i === 0 ? t('輸入這題') : String(i).padStart(2,'0')}</span><strong>${escapeHtml(word)}</strong></li>`).join('');

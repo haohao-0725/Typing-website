@@ -5,6 +5,7 @@ import { renderWordStrip } from './word-strip.js';
 import { translate } from './i18n.js';
 import { recordKey } from './analytics.js';
 import { initializeAnalysis } from './analysis-ui.js';
+import { recordComparison, isHomophoneSession } from './scoring.js';
 
 const $ = selector => document.querySelector(selector);
 const $$ = selector => [...document.querySelectorAll(selector)];
@@ -14,6 +15,16 @@ const mode = document.body.dataset.mode;
 const input = $('#typing-input');
 const ui = document.body.dataset.ui || 'zh';
 const t = (message, parameters={}) => translate(message, ui, parameters);
+const homophoneOption = language === 'zh' && mode === 'words' ? $('#homophone-option') : null;
+let homophoneEnabled = false;
+// Other practice modes never download the pronunciation dictionary.
+let phonetics = null;
+if (homophoneOption) {
+  homophoneOption.checked = false;
+  homophoneOption.disabled = true;
+  try { phonetics = await import('./phonetics.js'); }
+  catch { $('#homophone-description').textContent = t('讀音資料載入失敗，請重新整理後再試。'); }
+}
 let draftKeyUsage = {};
 const articleName = article => article.displayTitle || (article.id === 'zh-9441' ? '圖書館' : article.title);
 let articleLibrary = [];
@@ -43,6 +54,7 @@ function setLocked(locked) {
   });
   $$('.duration-options button').forEach(b => { b.disabled = locked; });
   $('#article-picker').disabled = locked || articleLoading;
+  if (homophoneOption) homophoneOption.disabled = locked || !phonetics;
 }
 function begin() {
   if (phase !== 'ready' || articleLoading) return;
@@ -64,7 +76,7 @@ function tick() {
 }
 function makeRecord(actual, partial = false) {
   return { expected: target(), actual: actual.normalize('NFC'), partial, keyUsage: {...draftKeyUsage}, keyUsageVersion: 1,
-    comparison: compareText(target(), actual, { partial }),
+    comparison: homophoneEnabled ? phonetics.compareHomophones(target(), actual, { partial }) : compareText(target(), actual, { partial }),
     elapsed: Math.round(Math.min(minutes * 60, (Date.now() - startedAt) / 1000) * 1000) / 1000,
     ...(mode === 'articles' ? { articleId: articleLibrary[selectedArticle].id, articleTitle: articleName(articleLibrary[selectedArticle]), sentence: sentenceIndex + 1 } : {}) };
 }
@@ -123,7 +135,8 @@ function submit() {
     if (sentenceIndex >= sentences.length) { loadArticle(selectedArticle + 1); toast(t('已接續下一篇文章。')); }
     else renderArticle();
   }
-  $('#input-feedback').textContent = record.comparison.errors ? t('已記錄 {count} 個錯誤',{count:record.comparison.errors}) : t('✓ 正確');
+  $('#input-feedback').textContent = record.comparison.errors ? t('已記錄 {count} 個錯誤',{count:record.comparison.errors})
+    : t(record.comparison.operations.some(op => op.homophone) ? '✓ 同音通過' : '✓ 正確');
   renderRecent(); updateStats(); input.focus();
 }
 function reset() {
@@ -164,25 +177,27 @@ function finish(reason) {
   $('#live-correct').textContent = stats.correct; $('#live-errors').textContent = stats.errors;
   currentResult = { id: crypto.randomUUID(), date: new Date().toISOString(), language, mode, minutes,
     elapsed: Math.round(seconds * 1000) / 1000, reason, ...stats, records: [...records],
-    scoringVersion: 1, articleSources: mode === 'articles' ? articleLibrary.filter(a => records.some(r => r.articleId === a.id)) : [] };
+    scoringVersion: homophoneEnabled ? 2 : 1, scoringMode: homophoneEnabled ? 'homophone' : 'exact',
+    ...(homophoneEnabled ? { phoneticDataVersion: phonetics.phoneticDataVersion } : {}),
+    articleSources: mode === 'articles' ? articleLibrary.filter(a => records.some(r => r.articleId === a.id)) : [] };
   const saved = saveSession(currentResult); updateHistoryCount();
   showResult(currentResult, saved ? t('已儲存在此瀏覽器。') : t('無法儲存，請下載當次結果。'));
 }
 
-function recordMarkup(record, index) {
- const comparison=compareText(record.expected,record.actual,{partial:record.partial});
- const typed=comparison.operations.map(op=>`<span class="${op.type}" title="${escapeHtml(t(op.type==='missing'?'漏字':op.type==='extra'?'多打':op.type==='substitution'?'應為 {expected}':'正確',{expected:op.expected}))}">${escapeHtml(op.type==='missing'?(op.expected===' '?'␣':op.expected):(op.actual===' '?'␣':op.actual))}</span>`).join('');
- const status=record.partial?t('未送出的部分輸入'):comparison.errors?t('{count} 個錯誤',{count:comparison.errors}):t('全部正確');
+function recordMarkup(record, index, session) {
+ const comparison=recordComparison(record,session);
+ const typed=comparison.operations.map(op=>`<span class="${op.type}${op.homophone?' homophone':''}" title="${escapeHtml(t(op.homophone?'同音通過':op.type==='missing'?'漏字':op.type==='extra'?'多打':op.type==='substitution'?'應為 {expected}':'正確',{expected:op.expected}))}">${escapeHtml(op.type==='missing'?(op.expected===' '?'␣':op.expected):(op.actual===' '?'␣':op.actual))}</span>`).join('');
+ const status=record.partial?t('未送出的部分輸入'):comparison.errors?t('{count} 個錯誤',{count:comparison.errors}):t(comparison.operations.some(op=>op.homophone)?'同音通過':'全部正確');
  return `<div class="record"><div class="record-label">${index+1} · ${Number(record.elapsed).toFixed(1)}s${record.articleTitle?' · '+escapeHtml(record.articleTitle):''}<span>${status}</span></div><p><small>${t('題目')}</small>${escapeHtml(record.expected)}</p><p><small>${t('輸入')}</small>${typed}</p></div>`;
 }
 function showResult(result,message=t('已儲存的測驗紀錄。')) {
  currentResult=result;
- $('#result-overline').textContent=`${t(result.language==='zh'?'中文':'英文')} · ${t(result.mode==='words'?'單字':'文章')} · ${t('{minutes} 分鐘',{minutes:result.minutes})}${result.reason==='manual'?' · '+t('提前結束'):''}`;
+ $('#result-overline').textContent=`${t(result.language==='zh'?'中文':'英文')} · ${t(result.mode==='words'?'單字':'文章')}${isHomophoneSession(result)?' · '+t('同音通過'):''} · ${t('{minutes} 分鐘',{minutes:result.minutes})}${result.reason==='manual'?' · '+t('提前結束'):''}`;
  const completed=result.records.filter(r=>!r.partial).length;
  $('#result-summary').innerHTML=`<div class="result-stats"><div><span>${t('速度')}</span><strong>${Number(result.speed).toFixed(1)}<small>${result.language==='zh'?t('字／分'):'WPM'}</small></strong></div><div><span>${t('正確率')}</span><strong>${Number(result.accuracy).toFixed(1)}<small>%</small></strong></div><div><span>${t('時間')}</span><strong>${timeLabel(result.elapsed)}</strong></div></div><div class="result-secondary">${[['正確字元',result.correct],['錯誤字元',result.errors],['完整送出',completed],['總輸入字元',result.typed]].map(([label,value])=>`<span>${t(label)} <b>${Number(value)}</b></span>`).join('')}</div>`;
  $('#save-status').textContent=message;
  $('#retry-button').textContent=t(phase==='running'?'繼續目前練習':'再練一次');
- $('#result-records').innerHTML=result.records.length?`<p class="record-key">${t('綠色：正確；紅色：錯字或多打；刪除線：漏字；␣：空格。')}</p>`+result.records.map(recordMarkup).join(''):`<p class="muted">${t('沒有已確認的輸入。')}</p>`;
+ $('#result-records').innerHTML=result.records.length?`<p class="record-key">${t('綠色：正確；紅色：錯字或多打；刪除線：漏字；␣：空格。')}${isHomophoneSession(result)?' '+t('點底線：同音通過。'):''}</p>`+result.records.map((record,index)=>recordMarkup(record,index,result)).join(''):`<p class="muted">${t('沒有已確認的輸入。')}</p>`;
  $('.result-details').open=false;openDialog('results-dialog');
  // Timeout can interrupt a stream of Enter/Space presses. Start on a neutral
  // heading rather than a button, so those presses cannot dismiss the result.
@@ -193,11 +208,17 @@ function showHistory() {
  const sessions=loadSessions();
  $('#history-feedback').textContent='';
  $('#clear-history-prompt').hidden=true;$('#clear-history').disabled=!sessions.length;
- $('#history-content').innerHTML=sessions.length?`<div class="history-scroll"><table class="history-table"><thead><tr>${['練習時間','內容','速度','正確率','紀錄'].map(label=>`<th>${t(label)}</th>`).join('')}</tr></thead><tbody>${sessions.map((entry,i)=>`<tr><td>${new Intl.DateTimeFormat(ui==='en'?'en-US':'zh-TW',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date(entry.date))}</td><td>${t(entry.language==='zh'?'中文':'英文')} · ${t(entry.mode==='words'?'單字':'文章')}</td><td>${Number(entry.speed).toFixed(1)} ${entry.language==='zh'?t('字／分'):'WPM'}</td><td>${Number(entry.accuracy).toFixed(1)}%</td><td class="history-actions"><button type="button" data-session="${i}">${t('查看')} ↗</button><button type="button" class="danger" data-delete-session="${escapeHtml(entry.id)}">${t('刪除')}</button></td></tr>`).join('')}</tbody></table></div>`:`<div class="empty-journal">${t('尚無練習紀錄。')}</div>`;
+ $('#history-content').innerHTML=sessions.length?`<div class="history-scroll"><table class="history-table"><thead><tr>${['練習時間','內容','速度','正確率','紀錄'].map(label=>`<th>${t(label)}</th>`).join('')}</tr></thead><tbody>${sessions.map((entry,i)=>`<tr><td>${new Intl.DateTimeFormat(ui==='en'?'en-US':'zh-TW',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date(entry.date))}</td><td>${t(entry.language==='zh'?'中文':'英文')} · ${t(entry.mode==='words'?'單字':'文章')}${isHomophoneSession(entry)?' · '+t('同音通過'):''}</td><td>${Number(entry.speed).toFixed(1)} ${entry.language==='zh'?t('字／分'):'WPM'}</td><td>${Number(entry.accuracy).toFixed(1)}%</td><td class="history-actions"><button type="button" data-session="${i}">${t('查看')} ↗</button><button type="button" class="danger" data-delete-session="${escapeHtml(entry.id)}">${t('刪除')}</button></td></tr>`).join('')}</tbody></table></div>`:`<div class="empty-journal">${t('尚無練習紀錄。')}</div>`;
  openDialog('history-dialog');
 }
 
 // Common dialogs keep native keyboard focus trapping and Escape-to-close behavior.
+if (homophoneOption) homophoneOption.addEventListener('change', () => {
+  if (phase === 'running' || !phonetics) { homophoneOption.checked = homophoneEnabled; return; }
+  homophoneEnabled = homophoneOption.checked;
+  $('#typing-hint').textContent = t(homophoneEnabled ? '同音含聲調即可；確認輸入法文字後，再按 Enter 送出。' : 'Enter 送出；中文選字完成後再按一次。');
+  if (phase === 'finished') reset();
+});
 $$('[data-dialog]').forEach(button => button.addEventListener('click', () => openDialog(button.dataset.dialog)));
 $$('[data-close]').forEach(button => button.addEventListener('click', () => button.closest('dialog').close()));
 $$('dialog').forEach(dialog => dialog.addEventListener('click', event => {

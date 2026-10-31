@@ -1,0 +1,44 @@
+{
+  "version": "mcbopomofo-18e2060dd5d0-ccbbac2639b5",
+  "revision": "18e2060dd5d0b511753ad79a8fe0d112e944f1af",
+  "repository": "https://github.com/openvanilla/McBopomofo",
+  "license": "CC BY-SA 4.0 (compiled prompt selection and editorial additions)",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+  "licenses": [
+    "CC BY-SA 4.0 (prompt selection and editorial additions)",
+    "MIT (McBopomofo)",
+    "BSD (libtabe phrase origins)"
+  ],
+  "promptSources": "public/word-sources.json",
+  "notices": [
+    "public/licenses/mcbopomofo-notice.txt",
+    "public/licenses/libtabe-notice.txt"
+  ],
+  "sources": [
+    {
+      "url": "https://raw.githubusercontent.com/openvanilla/McBopomofo/18e2060dd5d0b511753ad79a8fe0d112e944f1af/Source/Data/BPMFBase.txt",
+      "sha256": "46e64a53dc9c6baa2cbe6e0b1af572f8ef6aafb50597178b5fd53df804316ce7"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/openvanilla/McBopomofo/18e2060dd5d0b511753ad79a8fe0d112e944f1af/Source/Data/BPMFMappings.txt",
+      "sha256": "8dd751310c5effb7f9bdb24da494cb308492acd73a1665974fd886c4caf1fb26"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/openvanilla/McBopomofo/18e2060dd5d0b511753ad79a8fe0d112e944f1af/LICENSE.txt",
+      "sha256": "72ed32193b0c629def66df63791b2fb125946b593a3251380e6b949488f47b72"
+    }
+  ],
+  "editorialReadings": {
+    "path": "data/phonetic-overrides.json",
+    "sha256": "ccbbac2639b59dfffe88b9db387d57289728f04395a71d786745dcdaa2f6a473",
+    "count": 94
+  },
+  "counts": {
+    "characters": 21745,
+    "words": 5000,
+    "dictionaryWords": 4906,
+    "syllables": 1396
+  },
+  "generatedDataSha256": "2b1ac1b482042e338e6bc05e0d727b48fe6ef2f4ab402ede38c79582b1825ea4",
+  "changes": "Han-only character mappings; complete reading sequences for existing Chinese word prompts; tone marks retained; numbered syllable IDs; editorial readings override missing or reviewed prompts. No runtime API calls."
+}

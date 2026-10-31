@@ -58,6 +58,8 @@ export function renderPage(route='',siteUrl='',sourceTemplate=template) {
   languageLinks:link('zh',mode,t('中文'),language==='zh')+link('en',mode,'English',language==='en'),
   modeLinks:link(language,'words',t('單字練習'),mode==='words')+link(language,'articles',t('文章練習'),mode==='articles'),
   articleHidden:mode==='words'?'hidden':'',
+  homophoneSetting:language==='zh'&&mode==='words'?'<div class="homophone-setting"><label class="homophone-label" for="homophone-option"><input type="checkbox" id="homophone-option" autocomplete="off" aria-describedby="homophone-description" disabled><span>'+t('同音通過')+'</span><small>'+t('含聲調')+'</small></label><p id="homophone-description">'+t('不必挑字，例如「地獄」輸入「地域」也算正確。')+'</p></div>':'',
+  homophoneScoring:language==='zh'&&mode==='words'?'<dt>'+t('同音通過')+'</dt><dd>'+t('僅限中文單字，預設關閉。勾選後，漢字讀音與聲調符合題目就算正確；仍需確認輸入法文字。多音字以題目詞語讀音為準，輸入字任一收錄讀音符合即可；未知字、標點、漏字與多字仍照原規則。')+'</dd>':'',
   articleOptions:localArticles.map(a=>'<option value="'+a.id+'">'+escapeHtml(articleName(a))+'</option>').join(''),
   articleSource:t('來源：Wikipedia')+' · <a href="'+escapeHtml(localArticles[0].permalink)+'" target="_blank" rel="noopener noreferrer">'+escapeHtml(articleName(localArticles[0]))+' ↗</a> · CC BY-SA 4.0',
   initialPrompt:mode==='words'?renderWordStrip(words[language].slice(0,WORD_PREVIEW_COUNT),null,ui):'<div class="article-prompts"><p class="active-sentence">'+escapeHtml(localArticles[0].text)+'</p></div>',
@@ -66,6 +68,7 @@ export function renderPage(route='',siteUrl='',sourceTemplate=template) {
   speedUnit:language==='zh'?t('字／分'):'WPM',
   faq:faq.map(([question,answer])=>'<h2>'+question+'</h2><p>'+answer+'</p>').join(''),
   wordSources:'<h3>'+t('單字')+'</h3><p>'+t('中英文各 5,000 個去重詞彙。詞庫資料以 CC BY-SA 4.0 提供，程式碼授權與資料分開管理。')+'</p><p>'+t('保留原始編選詞彙；中文使用 CC-CEDICT 正體詞條，依 wordfreq 詞頻選取；英文由 wordfreq 選取並去重。')+'</p><p><a href="'+root+'public/word-sources.json" target="_blank" rel="noopener noreferrer">'+t('查看完整詞庫來源與授權')+' ↗</a> · <a href="'+root+'public/licenses/cc-cedict-notice.txt" target="_blank" rel="noopener noreferrer">CC-CEDICT</a> · <a href="'+root+'public/licenses/wordfreq-notice.md" target="_blank" rel="noopener noreferrer">wordfreq</a></p>',
+  phoneticSources:'<div class="source-entry"><h3>'+t('同音通過讀音資料')+'</h3><p>'+t('使用小麥注音的漢字與詞語讀音，並補充題庫詞語讀音；保留聲調。資料隨網站提供，在瀏覽器內比對。')+'</p><div><a href="'+root+'public/phonetic-sources.json" target="_blank" rel="noopener noreferrer">'+t('查看讀音資料來源')+' ↗</a><a href="'+root+'public/licenses/mcbopomofo-notice.txt" target="_blank" rel="noopener noreferrer">McBopomofo · MIT</a><a href="'+root+'public/licenses/libtabe-notice.txt" target="_blank" rel="noopener noreferrer">libtabe · BSD</a></div></div>',
   allSources:articles.map(a=>sourceMarkup(a,ui)).join(''),
   appendix:appendixMarkup(ui)
  };

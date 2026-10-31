@@ -24,6 +24,7 @@ npm run preview  # http://127.0.0.1:4173/
 - 1、3、5 或自訂 1–60 分鐘；第一個字或中文組字開始時啟動計時。
 - 單字一列六格：上一題、目前目標、後續四題。輸入目標固定第二格，以藍色和「輸入這題」標示，後續題目淡化；左側只保留最近一題的對錯。
 - Enter 送出，英文單字也可用空白鍵；打錯仍可送出。文章逐句練習、完成後接續。
+- 僅中文單字提供「同音通過」勾選項，預設關閉。開啟後，讀音與聲調相同的漢字算正確（如「地獄」輸入「地域」）；仍需確認輸入法文字，再按 Enter 送出。題目依整詞讀音比對，輸入字任一收錄讀音符合即可；未知字、標點、漏字與多字照原規則。測驗中鎖定選項。
 - 成績、逐題紀錄、JSON 下載與瀏覽器最近 50 次測驗。可刪除單筆紀錄，確認後同步更新紀錄數量與後續分析資料。
 - 分析室：字元錯誤位置與實體鍵位的錯題關聯熱圖，支援次數／比例與可檢查的計算方式。沒有錯字複習功能。
 - 主畫面僅保留功能資訊；完整規則與隱私說明收在對話框。頁面下方的雙語「說明附錄」介紹網站緣起與計分公式，預設摺疊。
@@ -44,6 +45,7 @@ npm run preview  # http://127.0.0.1:4173/
 - 英文以 wordfreq 詞頻選取 2–14 字母的小寫詞彙，去重並排除部分網頁雜訊與粗俗詞。
 - 產生的詞庫**資料**依 CC BY-SA 4.0 提供；來源、改作方式、原始版本與校驗碼見 [word-sources.json](public/word-sources.json) 與 [授權資料](public/licenses/)。資料授權與應用程式碼分開管理。
 - 文章由 Wikipedia contributors 撰寫，採 CC BY-SA 4.0。每篇保存永久版本、作者歷史與節錄修改說明，介面「來源」可查。
+- 同音判分使用固定版本的 McBopomofo 漢字讀音與題庫整詞讀音，另以 data/phonetic-overrides.json 補充缺少的 94 個題目；資料及原始授權見 public/phonetic-sources.json 與 public/licenses/（McBopomofo MIT、libtabe 詞語來源 BSD）。5,000 個中文題目均有整詞讀音，輸入候選涵蓋 21,745 個漢字。網站執行及 CI 不連線查字典。
 
 已產生的詞庫隨 Git 保存；部署不需要 Python 或外部 API。重新產生時：
 
@@ -53,6 +55,8 @@ npm run content:words
 ```
 
 CC-CEDICT 官方下載若過慢，腳本會中止；可將官方壓縮檔放到 artifacts/word-sources/cedict.u8.gz 後再執行。來源快取不進 Git。
+
+讀音資料以 `npm run content:phonetics` 重新產生；來源固定在匯入腳本中的 Git revision。修改詞庫後必須更新讀音資料；缺少整詞讀音時匯入會中止，需在 data/phonetic-overrides.json 補上並檢閱讀音。編選題目與補充讀音沿用 CC BY-SA 4.0；保留底層讀音資料的 MIT／BSD 原始聲明。
 
 文章更新用 `npm run content:refresh`；只追加題目並保留已收錄版本用 `npm run content:refresh -- --append`。更新後需檢閱內容。
 
@@ -76,12 +80,16 @@ Google Search Console 由網站擁有者手動操作：
 
 按 Enter 視為提交完整題目；時間到或提前結束只結算已輸入前綴，未完成的中文組字不計分。不同模式與輸入法的速度不宜直接相比。
 
+同音模式會保存當次判分模式、資料版本與逐字結果。結果明細以點底線標示接受的同音字，歷史紀錄與分析室沿用當次結果，不因目前的勾選設定或日後字典更新而改判。舊紀錄維持字形判分；中文文章與英文不提供同音模式。
+
 輸入內容、答案與鍵位累計只儲存在此瀏覽器，不上傳。儲存受限時仍可練習與下載當次結果，但不保留歷史。Google Fonts 提供字型；GitHub Pages 可能為安全用途記錄 IP。清除瀏覽器網站資料會移除歷史。
 
 ## 主要程式
 
 - src/main.js：測驗、組字、計時與介面。
 - src/engine.js：計分、佇列與句子切分。
+- src/phonetics.js、src/phonetic-data.js：同音判分與已產生的讀音資料；scripts/import-phonetics.mjs 匯入固定版本資料。
+- src/scoring.js：歷史結果與分析室共用的判分回放。
 - src/analytics.js、src/analysis-ui.js：熱圖計算與分析室。
 - src/i18n.js：介面翻譯；scripts/site.mjs 產生各語系 HTML。
 - src/words.js：產生的詞庫資料；scripts/import-words.py 為匯入工具。

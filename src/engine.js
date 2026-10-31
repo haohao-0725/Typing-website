@@ -3,14 +3,15 @@ export const chars = value => [...segmenter.segment(String(value).normalize('NFC
 
 // A single edit should not make all following characters wrong. Align committed text
 // using edit distance, counting substitutions, insertions and missing characters separately.
-export function compareText(expected, actual, { partial = false } = {}) {
+export function compareText(expected, actual, { partial = false, equivalent = (a, b) => a === b } = {}) {
   const a = chars(expected), b = chars(actual);
+  const matches = a.map((value, i) => b.map((other, j) => value === other || equivalent(value, other, i, j)));
   const rows = Array.from({ length: a.length + 1 }, () => new Uint16Array(b.length + 1));
   for (let i = 0; i <= a.length; i++) rows[i][0] = i;
   for (let j = 0; j <= b.length; j++) rows[0][j] = j;
   for (let i = 1; i <= a.length; i++) {
     for (let j = 1; j <= b.length; j++) {
-      rows[i][j] = Math.min(rows[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1),
+      rows[i][j] = Math.min(rows[i - 1][j - 1] + (matches[i - 1][j - 1] ? 0 : 1),
         rows[i - 1][j] + 1, rows[i][j - 1] + 1);
     }
   }
@@ -22,8 +23,11 @@ export function compareText(expected, actual, { partial = false } = {}) {
   }
   const operations = [];
   while (i || j) {
-    if (i && j && rows[i][j] === rows[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)) {
-      operations.push({ type: a[i - 1] === b[j - 1] ? 'correct' : 'substitution', expected: a[--i], actual: b[--j] });
+    if (i && j && rows[i][j] === rows[i - 1][j - 1] + (matches[i - 1][j - 1] ? 0 : 1)) {
+      const same = matches[i - 1][j - 1];
+      const homophone = same && a[i - 1] !== b[j - 1];
+      operations.push({ type: same ? 'correct' : 'substitution', expected: a[--i], actual: b[--j],
+        ...(homophone ? { homophone: true } : {}) });
     } else if (i && rows[i][j] === rows[i - 1][j] + 1) {
       operations.push({ type: 'missing', expected: a[--i], actual: '' });
     } else {
